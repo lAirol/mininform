@@ -1,6 +1,6 @@
 /**
  * Форма «Учредитель — физическое лицо»: добавление нескольких карточек,
- * data-path founders.0.*, founders.0.founders.0.* для сборки JSON через buildJsonFromForm().
+ * data-path founders_phys.0.*, founders_phys.0.founders_phys.0.* для сборки JSON через buildJsonFromForm().
  */
 const physical_person_founder = function () {
     const CONTAINER_ID = 'physical-person-founders-container';
@@ -10,7 +10,7 @@ const physical_person_founder = function () {
     const FILLER_LIST = document.getElementById("filler_2_2_list");
 
     const getContainer = () => document.getElementById(CONTAINER_ID);
-    const getJsurContainer = () => document.getElementById(JSUR_CONTAINER_ID);
+    const getJurContainer = () => document.getElementById(JSUR_CONTAINER_ID);
 
     function buildFormCard(index) {
         const p = `${BASE_PATH}.${index}`;
@@ -28,7 +28,6 @@ const physical_person_founder = function () {
                 </div>
 
                 <div class="founder-form-content">
-                    <button type="button" class="button_remove" title="Удалить" data-physical-person-remove>×</button>
                     <h4 class="physical-founder-title">Добавление учредителя СМИ – физическое лицо</h4>
 
                     <div class="full-width">
@@ -49,10 +48,6 @@ const physical_person_founder = function () {
                                 <option value="Эстония">Эстония</option>
                                 <option value="Польша">Польша</option>
                             </select>
-                        </div>
-                        <div class="field field--short">
-                            <label>Доля, %</label>
-                            <input type="number" step="0.01" data-path="${p}.sharePercent" data-validate="percent" placeholder="%" required>
                         </div>
                     </div>
 
@@ -198,7 +193,7 @@ const physical_person_founder = function () {
                 }
             }
 
-            if (target.classList.contains('btn-cancel-founder') || target.closest('[data-physical-person-remove]')) {
+            if (target.classList.contains('btn-cancel-founder')) {
                 if (card.getAttribute('data-state') === 'editing' && !card.querySelector('[data-path$=".fullName"]').value) {
                     card.remove();
                     checkContainersAndReindex();
@@ -222,7 +217,7 @@ const physical_person_founder = function () {
     function checkContainersAndReindex() {
         reindexContainer();
         const physCards = getContainer()?.querySelectorAll('.card-physical-founder').length || 0;
-        const jurCards = getJsurContainer()?.querySelectorAll('.card-jur-founder').length || 0;
+        const jurCards = getJurContainer()?.querySelectorAll('.card-jur-founder').length || 0;
     
         if (physCards === 0 && jurCards === 0) {
             FILLER_LIST.style.display = 'block';
@@ -326,7 +321,6 @@ const jur_person_founder = function () {
                 </div>
 
                 <div class="founder-form-content">
-                    <button type="button" class="button_remove" title="Удалить" data-jur-person-remove>×</button>
                     <h4 class="jur-founder-title">Добавление учредителя СМИ – юридическое лицо</h4>
                     <input type="hidden" data-path="${p}.typeFace" value="jurFace">
                     
@@ -554,7 +548,7 @@ const jur_person_founder = function () {
                     return;
                 }
 
-                if (target.classList.contains('btn-cancel-founder') || target.closest('[data-jur-person-remove]')) {
+                if (target.classList.contains('btn-cancel-founder')) {
                     if (card.getAttribute('data-state') === 'editing' && !card.querySelector('[data-path$=".name"]')?.value) {
                         card.remove();
                         reindexAll();
@@ -655,7 +649,6 @@ const office_owners = function () {
 
         return `
             <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}">
-                <button type="button" class="button_remove button_remove--small" title="Удалить" data-office-owner-item-remove>×</button>
                 <span class="nested-founder-icon ${isJur ? 'nested-founder-icon--jur' : 'nested-founder-icon--fiz'}" title="${isJur ? 'Юр. лицо' : 'Физ. лицо'}">
                     ${isJur ? JUR_ICON : '👤'}
                 </span>
@@ -714,7 +707,6 @@ const office_owners = function () {
                     </div>
                 </div>
                 <div class="nested-founder-fields office-owner-form">
-                    <button type="button" class="button_remove button_remove--small" title="Удалить" data-office-owner-item-remove>×</button>
                     <span class="nested-founder-icon ${isJur ? 'nested-founder-icon--jur' : 'nested-founder-icon--fiz'}" title="${isJur ? 'Юр. лицо' : 'Физ. лицо'}">
                         ${isJur ? JUR_ICON : '👤'}
                     </span>
@@ -955,10 +947,6 @@ const office_owners = function () {
                 updateRootVisibility();
             }
 
-            if (target.closest('[data-office-owner-item-remove]')) {
-                removeOwner(target.closest('.nested-founder-item'));
-            }
-
             const officeItem = target.closest('.nested-founder-item');
             if (officeItem && container.contains(officeItem)) {
                 if (target.classList.contains('btn-save-founder')) {
@@ -1140,7 +1128,6 @@ const sponsors_financing = function () {
                 </div>
 
                 <div class="sponsor-form-content">
-                    <button type="button" class="button_remove" title="Удалить" data-sponsor-remove>×</button>
                     <h4 class="sponsor-title">ДОБАВЛЕНИЕ ИСТОЧНИКА ФИНАНСИРОВАНИЯ – ${isFiz ? 'ФИЗИЧЕСКОГО ЛИЦА' : 'ЮРИДИЧЕСКОГО ЛИЦА'}:</h4>
                     <input type="hidden" data-path="${p}.typeFace" value="${isFiz ? 'fizFace' : 'jurFace'}">
 
@@ -1183,7 +1170,8 @@ const sponsors_financing = function () {
                     <p class="subtitle">ФОРМА УЧАСТИЯ В ФИНАНСИРОВАНИИ:</p>
                     <p class="form-hint">ВНИМАНИЕ! Оставьте заполненным по умолчанию или введите другую форму финансирования</p>
                     <div class="full-width">
-                        <textarea data-path="${p}.participationForm" rows="4"></textarea>
+                        <textarea data-path="${p}.participationForm" rows="4" required>Посредством участия в уставном фонде юридического лица, на которое возложены функции редакции средства массовой информации
+                        </textarea>
                     </div>
 
                     <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">

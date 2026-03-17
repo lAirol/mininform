@@ -50,6 +50,12 @@
       display:flex;
       gap:10px;
       margin-bottom:10px;
+      flex-wrap: wrap;
+    }
+
+    .row > .flex-line {
+        flex: 1;
+        min-width: 200px;
     }
 
     /* Общие стили полей ввода — везде одинаково */
@@ -616,24 +622,26 @@
       <h5>Контактные данные:</h5>
 
       <div class="row">
-        <div>
-            <label>Код города:</label>
-            <input type="tel" inputmode="numeric" data-path="office.phoneCode" required="" data-validate="phoneCode">
-        </div>
-        <div>
-            <label>Телефон:</label>
-            <input type="tel" data-path="office.phone" required="" data-validate="phone">
-        </div>
-        <div>
-            <label>Факс:</label>
-            <input type="text" data-path="office.fax" required="">
-        </div>
-        <div>
-            <label>Email:</label>
-            <input type="email" data-path="office.email" required="" data-validate="email">
+        <div class="flex-line">
+            <div>
+                <label>Код города:</label>
+                <input type="tel" inputmode="numeric" data-path="office.phoneCode" required="" data-validate="phoneCode">
+            </div>
+            <div>
+                <label>Телефон:</label>
+                <input type="tel" data-path="office.phone" required="" data-validate="phone">
+            </div>
+            <div>
+                <label>Факс:</label>
+                <input type="text" data-path="office.fax" required="">
+            </div>
+            <div>
+                <label>Email:</label>
+                <input type="email" data-path="office.email" required="" data-validate="email">
+            </div>
         </div>
       </div>
-      <div class="row">
+      <div class="full-width">
         <div>
             <label>Адрес веб сайта:</label>
             <input type="text" data-path="office.www">
@@ -711,16 +719,16 @@
         </label>
         <h7>Образование:</h7>
 
-        <div class="row">
-            <div style="flex: 0 0 70%;">
+        <div class="full-width">
+            <div>
                 <label>Учебное заведение, которое окончил главный редактор (редактор), год поступления(окончания)</label>
                 <input type="text" data-path="office.chiefEditor.institution" required="">
             </div>
         </div>
 
         <h7>Сведения о работе на руководящих должностях:</h7>
-        <div class="row">
-            <div style="flex: 0 0 50%;">
+        <div class="full-width">
+            <div>
                 <label>Место работы, должность, период работы</label>
                 <input type="text" data-path="office.chiefEditor.formerJobInfo" required="">
             </div>

@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <title>Заявление о регистрации СМИ</title>
+
+  <style>
+
+    body{
+      font-family: Arial, sans-serif;
+      background:#f4f6f8;
+      margin:0;
+      padding:40px;
+    }
+
+    .container{
+      max-width:900px;
+      margin:auto;
+    }
+
+    h1{
+      font-size:24px;
+    }
+
+    .step{
+      margin-top:40px;
+    }
+
+    .step{
+      display:none;
+    }
+
+    .step.active{
+      display:block;
+    }
+
+    .card{
+      background:white;
+      padding:20px;
+      border-radius:10px;
+      margin-bottom:20px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .card h3{
+      margin-top:0;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    /* Общие стили полей ввода — везде одинаково */
+    input:not([type="radio"]):not([type="checkbox"]),
+    select,
+    textarea{
+      width:100%;
+      padding:8px;
+      box-sizing:border-box;
+      font-family:inherit;
+      font-size:14px;
+    }
+
+    label{
+      font-size:14px;
+      display:block;
+      margin-bottom:5px;
+    }
+
+    button{
+      padding:10px 16px;
+      border:none;
+      border-radius:6px;
+      background:#2e7d32;
+      color:white;
+      cursor:pointer;
+    }
+
+    .add-btn{
+      background:#ddd;
+      color:#333;
+    }
+
+    .circle-plus{
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      border:1px solid #2e7d32;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:#2e7d32;
+      font-weight:bold;
+      font-size:16px;
+      cursor:pointer;
+      margin-right:8px;
+    }
+
+    .full-width{
+      margin-bottom:10px;
+    }
+
+    .muted{
+      font-size:12px;
+      color:#777;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea{
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      /* border-radius: 6px; */
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .input-error{
+      border-color:#d32f2f !important;
+      outline:none;
+    }
+
+    .input-error-text{
+      color:#d32f2f;
+      font-size:12px;
+      margin-top:4px;
+    }
+
+    .subtitle{
+      font-size:13px;
+      font-weight:bold;
+      margin:15px 0 5px;
+    }
+
+    .inline-options{
+      display:flex;
+      flex-wrap:wrap;
+      gap:15px;
+      margin:5px 0 10px;
+    }
+
+    .section-title{
+      font-size:18px;
+      margin:0 0 10px;
+    }
+
+    .step-header{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .step-number{
+      font-weight:bold;
+      font-size:18px;
+      color:#777;
+    }
+
+    .nowrap{
+      white-space:nowrap;
+    }
+
+    .flex-line{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .flex-line label{
+      margin-bottom:0;
+    }
+
+    .step-nav{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin:25px 0 10px;
+    }
+
+    .step-nav .left,
+    .step-nav .right{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    .step-nav .progress{
+      font-size:13px;
+      color:#666;
+      white-space:nowrap;
+    }
+
+    .btn-secondary{
+      background:#ddd;
+      color:#333;
+    }
+
+    button:disabled{
+      opacity:0.55;
+      cursor:not-allowed;
+    }
+
+    .add-action{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .add-action span:last-child{
+      line-height:1.2;
+    }
+
+    .card_wrapper{
+      position:relative;
+      border:1px solid rgba(0,0,0,0.06);
+      border-radius:10px;
+      padding:16px;
+      margin-top:12px;
+      background:#fff;
+    }
+
+    .button_remove{
+      position:absolute;
+      top:10px;
+      right:10px;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      border:1px solid rgba(0,0,0,0.12);
+      background:#fff;
+      color:#555;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .fit{
+      display: flex;
+      align-items: center;
+    }
+
+    .inner_card{
+        margin-left:20px;
+        padding: 10px;
+        border-radius: 10px;
+        background-color: #eeeeee;
+    }
+
+
+    .field-row{
+      display:flex;
+      gap:12px;
+      margin-bottom:12px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+    }
+    .field-row .field{
+      flex:1;
+      min-width:0;
+    }
+    .field-row .field--short{
+      flex:0 0 120px;
+    }
+    .contact-row{
+      display:grid;
+      grid-template-columns:80px 1fr 100px 1fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .contact-row label{
+      margin-bottom:5px;
+    }
+    @media (max-width: 600px){
+      .contact-row{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    #physical-person-founders-container,
+    #jur-person-founders-container {
+      margin-top: 16px;
+    }
+
+    .form-add-founder{
+      position: relative;
+      max-width: 720px;
+      margin-bottom: 20px;
+    }
+    .form-add-founder.card,
+    .card-sponsor {
+      position: relative;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .form-add-founder.card-physical-founder .button_remove,
+    .form-add-founder.card-jur-founder .button_remove,
+    .card-sponsor .button_remove{
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .jur-founders-inner,
+    .nested-founders-block {
+      margin-top: 16px;
+      margin-left: 20px;
+      padding-left: 12px;
+      border-left: 2px solid #e0e0e0;
+    }
+    .nested-founders-title {
+      font-weight: bold;
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+    .nested-founders-warning {
+      color: #c62828;
+      font-size: 13px;
+      margin: 0 0 12px;
+      font-weight: 500;
+    }
+    .nested-founder-item {
+      position: relative;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #fafafa;
+      border-radius: 6px;
+    }
+    .nested-founder-item .button_remove--small {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .nested-founder-icon {
+      display: inline-block;
+      margin-right: 8px;
+      font-size: 1.1em;
+    }
+    .founders-sum {
+      margin: 10px 0 12px;
+      padding: 8px 10px;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    .founders-sum--complete {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .founders-sum--incomplete {
+      background: #ffebee;
+      color: #c62828;
+    }
+    .nested-founders-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .button_add_nested {
+      padding: 10px 16px;
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #90caf9;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .button_add_nested:hover {
+      background: #bbdefb;
+    }
+    .founders-sum--incomplete + .nested-founders-actions .button_add_nested {
+      background: #ffcdd2;
+      color: #b71c1c;
+      border-color: #ef9a9a;
+    }
+    .founders-sum--incomplete + .nested-founders-actions .button_add_nested:hover {
+      background: #ef9a9a;
+    }
+    .form-add-founder .notice-block{
+      color: #c62828;
+      font-size: 13px;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .form-add-founder .physical-founder-title{
+      margin: 0 0 16px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .form-add-founder .compliance-section{
+      margin-top: 20px;
+    }
+    .form-add-founder .compliance-section h3{
+      font-size: 14px;
+      margin: 0 0 12px;
+    }
+    .form-add-founder .compliance-item{
+      margin-bottom: 10px;
+    }
+    .form-add-founder .compliance-item .question{
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .form-add-founder .compliance-item .radios{
+      display: flex;
+      gap: 16px;
+    }
+    .form-add-founder .compliance-item label{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 0;
+      cursor: pointer;
+    }
+
+    .founder-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    }
+  .founder-preview-info { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+  .founder-icon { font-size: 20px; }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>ЗАЯВЛЕНИЕ О ГОСУДАРСТВЕННОЙ РЕГИСТРАЦИИ (ПЕРЕРЕГИСТРАЦИИ) СРЕДСТВА МАССОВОЙ ИНФОРМАЦИИ</h1>
+
+    <!-- ШАГ 1 -->
+    <div class="step">
+
+        <div class="step-header">
+            <div class="step-number">ШАГ 1 из 6</div>
+            <h2 class="section-title">Основные данные СМИ</h2>
+        </div>
+
+        <div class="card">
+
+            <h3>1.1 Название и тип </h3>
+
+            <div class="full-width">
+                <label>Название средства массовой информации:</label>
+                <input type="text" data-path="mainInfo.name" required="" onchange="updateName(this.value)">
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>Тип СМИ:</label>
+                    <select data-path="mainInfo.typeSmi" required="">
+                        <option value="" selected="selected" disabled="disabled" hidden=""></option>
+                        <option>Печатное СМИ</option>
+                        <option>Электронное СМИ</option>
+                        <option>Сетевое СМИ</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Вид СМИ:</label>
+                    <select data-path="mainInfo.kindSmi" onchange="handleKindSmiOtherChange(this)" required="">
+                        <option value="" selected="selected" disabled="disabled" hidden=""></option>
+                        <option>Сетевое издание</option>
+                        <option>Телепрограмма</option>
+                        <option>Радиопрограмма</option>
+                        <option>Газета</option>
+                        <option>Журнал</option>
+                        <option>Информационное агенство</option>
+                        <option>Альманах</option>
+                        <option>Календарь</option>
+                        <option>Каталог</option>
+                        <option>Другое</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label>Другой вид СМИ(заполните, если это не этот пункт в списке выше)</label>
+                    <input type="text" data-path="mainInfo.kindSmiOther" disabled="disabled">
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ШАГ 2 -->
+    <div class="step active">
+
+        <div class="step-header">
+            <div class="step-number">ШАГ 2 из 6</div>
+            <h2 class="section-title">Учредители (владелец) СМИ</h2>
+        </div>
+
+        <div class="card">
+
+            <h3>2.1 Тип</h3>
+
+            <div class="inline-options">
+                <label><input type="radio" name="founder_type" value="jurFace" checked="checked" onchange="changeFace()">Учредитель</label>
+                <label><input type="radio" name="founder_type" value="fizFace" onchange="changeFace()">Владелец сетевого издания</label>
+            </div>
+
+        </div>
+
+
+        <div id="founder" class="card">
+
+            <h3>2.2 Реквизиты учредителей сми <span id="person_name"></span></h3>
+
+            <div style="margin-left:20px">
+                <div id="filler_2_2_list">
+                  <hr>
+                    <label>Список учередителей пока пуст(поменять фикс маргин у дива выше и при создании ниже)</label>
+                  <hr>
+                </div>
+                <div id="min_founder"></div>
+                <div id="physical-person-founders-container"></div>
+                <div id="jur-person-founders-container"></div>
+                <div class="row">
+                    <div>
+                        <div class="add-action" data-add-physical-founder>
+                            <span class="circle-plus">+</span>
+                            <span>Добавить владельца - физическое лицо</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="add-action" data-add-jur-founder>
+                            <span class="circle-plus">+</span>
+                            <span>Добавить владельца - юридическое лицо</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="domainOwner" class="card" style="display: none" data-ignore-container="">
+            <h3>2.2 Владелец сетевого издания</h3>
+            <div class="row">
+                <div>
+                    <div class="add-action" data-domain-owner-add="fiz">
+                        <span class="circle-plus">+</span>
+                        <span>Добавить владельца - физическое лицо</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="add-action" data-domain-owner-add="jur">
+                        <span class="circle-plus">+</span>
+                        <span>Добавить владельца - юридическое лицо</span>
+                    </div>
+                </div>
+            </div>
+            <div id="domain-owner-container"></div>
+        </div>
+
+    </div>
+
+
+  <!-- ШАГ 3 -->
+  <div class="step">
+
+    <div class="step-header">
+      <div class="step-number">ШАГ 3 из 6</div>
+      <h2 class="section-title">Сведения о редакции</h2>
+    </div>
+
+    <div class="card">
+
+      <h3>3.1 Юридическое лицо, выполняющие функции редакции</h3>
+
+      <div class="full-width">
+        <label>Полное наименование юридического лица:</label>
+        <input type="text" data-path="office.fullName" required="">
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Резидент какой страны:</label>
+          <select data-path="office.country" required="">
+              <option value="" selected="selected" disabled="disabled" hidden=""></option>
+              <option>Республика Беларусь</option>
+              <option>Российская Федерация</option>
+              <option>Латвия</option>
+              <option>Литва</option>
+              <option>Эстония</option>
+              <option>Польша</option>
+  
+          </select>
+        </div>
+      </div>
+      <div class="full-width">
+        <div>
+          <label>Адрес(индекс, область, район, город, улица, дом, корпус, офис)</label>
+          <input type="text" data-path="office.address" required="">
+        </div>
+      </div>
+
+      <h5>Контактные данные:</h5>
+
+      <div class="row">
+        <div>
+            <label>Код города:</label>
+            <input type="tel" inputmode="numeric" data-path="office.phoneCode" required="" data-validate="phoneCode">
+        </div>
+        <div>
+            <label>Телефон:</label>
+            <input type="tel" data-path="office.phone" required="" data-validate="phone">
+        </div>
+        <div>
+            <label>Факс:</label>
+            <input type="text" data-path="office.fax" required="">
+        </div>
+        <div>
+            <label>Email:</label>
+            <input type="email" data-path="office.email" required="" data-validate="email">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+            <label>Адрес веб сайта:</label>
+            <input type="text" data-path="office.www">
+        </div>
+      </div>
+
+      <div class="inline-options">
+        <label>
+          <input type="radio" name="room" value="true" data-path="office.meetsLegalRqmts"> Да
+          <input type="radio" name="room" value="false" data-path="office.meetsLegalRqmts" checked="checked"> Нет
+          <span>Помещение, в котором размещается юридическое лицо, на 
+            которое возложены функции редакции средства массовой информации,
+            соответствует требованиям законодательства</span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div>
+            <label>Тип помещения:</label>
+            <select data-path="office.room" required="">
+                <option value="" selected="selected" disabled="disabled" hidden=""></option>
+                <option>Жилом помещении</option>
+                <option>Нежилом помещении</option>
+                <option>Помещении, которое переведено из жилого в нежилое</option>
+            </select>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="card">
+      <h3>3.2 Сведения о собственниках имущества этого юрлица</h3>
+      <div id="office-owners-container"></div>
+      <div class="row">
+        <div>
+          <div class="add-action" data-add-office-owner="fiz">
+            <span class="circle-plus">+</span>
+            <span>Добавить владельца – физическое лицо</span>
+          </div>
+        </div>
+        <div>
+          <div class="add-action" data-add-office-owner="jur">
+            <span class="circle-plus">+</span>
+            <span>Добавить владельца – юридическое лицо</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+        <h3>3.3 Главный редактор</h3>
+        <div class="full-width">
+            <label>Ф.И.О.:</label>
+            <input type="text" data-path="office.chiefEditor.name" required="">
+        </div>
+        <div class="row">
+            <div>
+                <label>Гражданство:</label>
+                <select data-path="office.chiefEditor.country" required="">
+                    <option value="" selected="selected" disabled="disabled" hidden=""></option> 
+                    <option>Гражданин Республики Беларусь</option>
+                    <option>Иностранный гражданин</option>
+                    <option>Лицо без гражданства</option>
+                </select>
+            </div>
+            <div>
+                <label>Данные акта о назначении(номер, дата приказа и т.д.)</label>
+                <input type="text" data-path="office.chiefEditor.actAssignment" required="">
+            </div>
+        </div>
+        <label>
+            <input type="radio" name="qualification" value="true" data-path="office.chiefEditor.meetRequirements"> Да
+            <input type="radio" name="qualification" value="false" data-path="office.chiefEditor.meetRequirements" checked="checked"> Нет
+            <span>Главный редактор соответствует квалификационным требованиям</span>
+        </label>
+        <h7>Образование:</h7>
+
+        <div class="row">
+            <div style="flex: 0 0 70%;">
+                <label>Учебное заведение, которое окончил главный редактор (редактор), год поступления(окончания)</label>
+                <input type="text" data-path="office.chiefEditor.institution" required="">
+            </div>
+        </div>
+
+        <h7>Сведения о работе на руководящих должностях:</h7>
+        <div class="row">
+            <div style="flex: 0 0 50%;">
+                <label>Место работы, должность, период работы</label>
+                <input type="text" data-path="office.chiefEditor.formerJobInfo" required="">
+            </div>
+        </div>
+      </div>
+
+  </div>
+
+
+  <!-- ШАГ 4 -->
+  <div class="step">
+
+    <div class="step-header">
+      <div class="step-number">ШАГ 4 из 6</div>
+      <h2 class="section-title">Тематика и распространение СМИ</h2>
+    </div>
+
+    <div class="card">
+
+      <h3>4.1 Специализация и тематика</h3>
+
+      <div class="full-width">
+        <label>Специализация (начните вводить, чтобы увидеть варианты, или выберите из списка):</label>
+        <select data-path="mainInfo.specialization" required="">
+            <option value="" selected="selected" disabled="disabled" hidden=""></option>
+            <option>Общеполитическая</option>
+            <option>Специализированная-официальная</option>
+            <option>Научная</option>
+            <option>Научно-популярная</option>
+            <option>Литературно-художественная</option>
+            <option>Производственно-практическая</option>
+            <option>Нормативная производственно-практическая</option>
+            <option>Учебная</option>
+            <option>Массово-политическая</option>
+            <option>Духовно-просветительская</option>
+            <option>Справочная</option>
+            <option>Рекламная</option>
+            <option>Для досуга</option>
+            <option>Литературно-художественный</option>
+            <option>Общественно-политический</option>
+            <option>Популярный</option>
+            <option>Научный</option>
+            <option>Научно-популярный</option>
+            <option>Рекламный</option>
+            <option>Справочный</option>
+            <option>Духовно-просветительский</option>
+            <option>Производственно-практический</option>
+            <option>Нормативный производственно-практический</option>
+            <option>Реферативный</option>
+            <option>Бюллетень-таблица</option>
+            <option>Статистический бюллетень</option>
+            <option>Бюллетень-хроника</option>
+            <option>Нормативный</option>
+            <option>Информационная</option>
+            <option>Информационно-аналитическая</option>
+            <option>Специализированная информационная</option>
+            <option>Публицистическая</option>
+            <option>Развлекательная</option>
+            <option>Детская</option>
+            <option>Музыкальная</option>
+            <option>Спортивная</option>
+            <option>Образовательная</option>
+            <option>Культурно-просветительная</option>
+            <option>Духовно-просветительная</option>
+            <option>Демонстрация художественных(игровых) кинофильмов</option>
+        </select>
+        <span class="subtitle">Выбранные варианты:<span>Не выбрано</span></span>
+      </div>
+      <div>
+        <label>
+            <input type="checkbox" data-path="mainInfo.specializationOtherEnabled" onclick="toggleActive('specializationOther')">
+            Другая (впишите в поле свою специализацию, если её нет в списке выше):
+        </label>
+      </div>
+      <div class="full-width">
+        <input id="specializationOther" type="text" data-path="mainInfo.specializationOther" disabled="disabled">
+      </div>
+
+        <hr>
+      <div class="full-width">
+        <label>Тематика (начните вводить, чтобы увидеть варианты):</label>
+        <select data-path="mainInfo.subjects" required="">
+            <option value="" selected="selected" disabled="disabled" hidden=""></option>
+            <option>Военное дело</option>
+            <option>Государство</option>
+            <option>Детектив</option>
+            <option>Детская</option>
+            <option>Для женщин и мужчин</option>
+            <option>Домашнее хозяйство</option>
+            <option>Жилищно-коммунальное хозяйство</option>
+            <option>Защита животных</option>
+            <option>Здоровье</option>
+            <option>Информатика</option>
+            <option>Искусство</option>
+            <option>История</option>
+            <option>Книговедение</option>
+            <option>Компьютерная</option>
+            <option>Краеведение</option>
+            <option>Культура</option>
+            <option>Лесное хозяйство</option>
+            <option>Медицина</option>
+            <option>Молодежная</option>
+            <option>Образование</option>
+            <option>Общественное питание</option>
+            <option>Педагогика</option>
+            <option>Печать</option>
+            <option>Полиграфия</option>
+            <option>Потребкооперация</option>
+            <option>Право</option>
+            <option>Правопорядок</option>
+            <option>Предпринимательство</option>
+            <option>Природа</option>
+            <option>Продовольствие</option>
+            <option>Промышленность</option>
+            <option>Психология</option>
+            <option>Радиоэлектроника</option>
+            <option>Религия</option>
+            <option>Сатира и юмор</option>
+            <option>Связь</option>
+            <option>Сельское хозяйство</option>
+            <option>Семья</option>
+            <option>Социальная защита</option>
+            <option>Социология</option>
+            <option>Спорт</option>
+            <option>Статистика</option>
+            <option>Страхование</option>
+            <option>Строительство</option>
+            <option>Техника</option>
+            <option>Торговля</option>
+            <option>Транспорт</option>
+            <option>Труд</option>
+            <option>Туризм</option>
+            <option>Управление
+        </option></select>
+        <span class="subtitle">Выбранные варианты:<span>Не выбрано</span></span>
+      </div>
+      <div>
+        <label>
+            <input type="checkbox" data-path="mainInfo.subjectsOtherEnabled" onclick="toggleActive('subjectsOther')">
+            Другая (впишите в поле свою тематику, если её нет в списке выше):
+        </label>
+      </div>
+      <div class="full-width">
+        <input id="subjectsOther" type="text" data-path="mainInfo.subjectsOther" disabled="disabled">
+      </div>
+    </div>
+
+
+    <div class="card">
+
+      <!-- Это не обзазательные поля -->
+      <h3>4.2 Периодичность и объем СМИ</h3>
+
+      <div class="subtitle">Периодичность средства массовой информации:</div>
+
+      <div class="inline-options">
+        <label><input type="radio" name="periodicity" value="Ежедневно" data-path="mainInfo.periodicity" checked="checked"> Ежедневно</label>
+        <label><input type="radio" name="periodicity" value="Еженедельно" data-path="mainInfo.periodicity"> Еженедельно</label>
+        <label><input type="radio" name="periodicity" value="Несколько раз в неделю" data-path="mainInfo.periodicity"> Несколько раз в неделю</label>
+        <label><input type="radio" name="periodicity" value="Ежемесячно" data-path="mainInfo.periodicity"> Ежемесячно</label>
+        <label><input type="radio" name="periodicity" value="Один раз в два месяца" data-path="mainInfo.periodicity"> Один раз в два месяца</label>
+        <label><input type="radio" name="periodicity" value="Ежеквартально" data-path="mainInfo.periodicity"> Ежеквартально</label>
+        <label><input type="radio" name="periodicity" value="Один раз в полугодие" data-path="mainInfo.periodicity"> Один раз в полугодие</label>
+        <label><input type="radio" name="periodicity" value="Другое" data-path="mainInfo.periodicity"> Другое:</label>
+      </div>
+      <div class="full-width">
+        <input type="text" data-path="mainInfo.periodicityOther" disabled="disabled">
+      </div>
+
+      <div class="subtitle">Максимальный объём вещания:</div>
+
+      <div class="inline-options">
+        <label><input type="radio" name="volumeVoice" value="до 1 часа" data-path="mainInfo.volumeVoice" checked="checked"> до 1 часа</label>
+        <label><input type="radio" name="volumeVoice" value="1 - 6 часов" data-path="mainInfo.volumeVoice"> 1 - 6 часов</label>
+        <label><input type="radio" name="volumeVoice" value="6 - 12 часов" data-path="mainInfo.volumeVoice"> 6 - 12 часов</label>
+        <label><input type="radio" name="volumeVoice" value="12 - 18 часов" data-path="mainInfo.volumeVoice"> 12 - 18 часов</label>
+        <label><input type="radio" name="volumeVoice" value="до 24 часов" data-path="mainInfo.volumeVoice"> до 24 часов</label>
+        <label><input type="radio" name="volumeVoice" value="Другое" data-path="mainInfo.volumeVoice"> Другое:</label>
+      </div>
+      <div class="full-width">
+        <input type="text" data-path="mainInfo.volumeVoiceOther" disabled="disabled">
+      </div>
+
+      <div class="full-width flex-line">
+        <label>Ежемесячный объём материалов белорусского производства(для телевизионного СМИ), %</label>
+        <input type="number" inputmode="numeric" data-path="mainInfo.bynVolume" data-validate="percent">
+      </div>
+    <div class="full-width flex-line">
+        <label>Предпологаемый тираж массовой информации (для печатного средства массовой информации):</label>
+        <input type="number" inputmode="numeric" data-path="mainInfo.circulation">
+    </div>
+    </div>
+
+    <div class="card">
+
+        <h3>4.3 Периодичность и территория распространения</h3>
+  
+        <div class="subtitle">Языки распространения:</div>
+
+        <div class="inline-options">
+            <label><input type="checkbox" value="Русский" data-path="mainInfo.language"> Русский</label>
+            <label><input type="checkbox" value="Белорусский" data-path="mainInfo.language"> Белорусский</label>
+            <label><input type="checkbox" value="Украинский" data-path="mainInfo.language"> Украинский</label>
+            <label><input type="checkbox" value="Польский" data-path="mainInfo.language"> Польский</label>
+            <label><input type="checkbox" value="Немецкий" data-path="mainInfo.language"> Немецкий</label>
+            <label><input type="checkbox" value="Французский" data-path="mainInfo.language"> Французский</label>
+            <label><input type="checkbox" value="Испанский" data-path="mainInfo.language"> Испанский</label>
+            <label><input type="checkbox" value="Другое" data-path="mainInfo.languageOther" onclick="toggleActive('languageOtherText')"> Другое:</label>
+        </div>
+        <div class="full-width">
+            <input id="languageOtherText" type="text" data-path="mainInfo.languageOtherText" disabled="disabled">
+        </div>
+
+        
+        <div class="subtitle">Предполагаемая территория распростанения средства массовой информации:</div>
+        <div class="inline-options">
+            <label><input type="radio" name="distributionTerritory" value="Международная" data-path="mainInfo.distributionTerritory" checked="checked"> Международная</label>
+            <label><input type="radio" name="distributionTerritory" value="Республика Беларусь" data-path="mainInfo.distributionTerritory"> Республика Беларусь</label>
+            <label><input type="radio" name="distributionTerritory" value="Область" data-path="mainInfo.distributionTerritory"> Область</label>
+            <label><input type="radio" name="distributionTerritory" value="Район" data-path="mainInfo.distributionTerritory"> Район</label>
+            <label><input type="radio" name="distributionTerritory" value="Город" data-path="mainInfo.distributionTerritory"> Город</label>
+            <label><input type="radio" name="distributionTerritory" value="Населённый пункт" data-path="mainInfo.distributionTerritory"> населенный пункт</label>
+            <label><input type="radio" name="distributionTerritory" value="Организация" data-path="mainInfo.distributionTerritory"> Организация</label>
+            <label><input type="radio" name="distributionTerritory" value="Другое" data-path="mainInfo.distributionTerritory"> Другое:</label>
+        </div>
+        <div class="full-width">
+            <input type="text" data-path="mainInfo.distributionTerritoryDetail" disabled="disabled">
+        </div>
+    
+        <div class="full-width">
+            <label>Уточнение названия территории:</label>
+            <input type="text" data-path="mainInfo.distributionTerritoryDetailExtra" required="">
+        </div>
+    </div>
+
+  </div>
+
+
+  <!-- ШАГ 5 -->
+  <div class="step">
+
+    <div class="step-header">
+      <div class="step-number">ШАГ 5 из 6</div>
+      <h2 class="section-title">Финансирование и доп. сведения</h2>
+    </div>
+
+    <div class="card">
+
+      <h3>5.1 Подтверждение законности финансирования</h3>
+
+      <div class="inline-options">
+        <label><input type="radio" name="financing_ok" value="true" data-path="financingMeetsLegalRqmts"> Да</label>
+        <label><input type="radio" name="financing_ok" value="false" data-path="financingMeetsLegalRqmts" checked="checked"> Нет</label>
+        <span>Главный редактор соответствует квалификационным требованиям</span>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>5.2 Источники поступления средств</h3>
+
+      <div id="sponsors-container"></div>
+
+      <div class="row">
+        <div>
+          <div class="add-action" data-add-sponsor="fiz">
+            <span class="circle-plus">+</span>
+            <span>Поступающие от физического лица</span>
+          </div>
+        </div>
+        <div>
+          <div class="add-action" data-add-sponsor="jur">
+            <span class="circle-plus">+</span>
+            <span>Поступающие от юридического лица</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="full-width">
+        <label>Другие источники финансирования:</label>
+        <input type="text" data-path="sponsorOtherSources" required="">
+      </div>
+    </div>
+
+    <div class="card">
+
+        <h3>5.3 Прочие сведения</h3>
+
+        <div class="full-width">
+            <label>Является ли учредитель (учредители) СМИ учредителем, главным редактором, редактором или журналистом других СМИ (для учредителя
+                физического лица), распространителем продукции средства массовой информации:</label>
+            <input type="textarea" data-path="information">
+        </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ШАГ 6 -->
+  <div class="step">
+
+    <div class="step-header">
+      <div class="step-number">ШАГ 6 из 6</div>
+      <h2 class="section-title">Отправка формы</h2>
+    </div>
+
+    <div class="card">
+        <h3>6.1 Подтвердите и отправьте</h3>
+
+        <div class="inline-options">
+            <label><input type="radio" name="confirm" value="true" data-path="confirm"> Да</label>
+            <label><input type="radio" name="confirm" value="false" data-path="confirm" checked="checked"> Нет</label>
+            <span>Я подтверждаю, что все введенные
+                данные верны и соответствуют
+                действительности</span>
+            <input type="button" value="Отправить заявление на регистрацию" id="submitJsonBtn">
+        </div>
+
+    </div>
+
+  </div>
+
+  <div class="card step-nav" id="stepNav">
+    <div class="left">
+      <button type="button" class="btn-secondary" id="prevStep">Назад</button>
+      <button type="button" id="nextStep">Далее</button>
+    </div>
+    <div class="right">
+      <div class="progress" id="stepProgress">ШАГ 2 из 7</div>
+    </div>
+  </div>
+
+    </div>
+
+
+<script src="add_forms.js"></script>
+<script src="main.js"></script>
+
+
+</body></html>

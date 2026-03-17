@@ -1,0 +1,538 @@
+<html lang="ru"><head>
+    <meta charset="UTF-8">
+    <title>Заявление о регистрации СМИ</title>
+  
+    <style>
+  
+      body{
+        font-family: Arial, sans-serif;
+        background:#f4f6f8;
+        margin:0;
+        padding:40px;
+      }
+  
+      .container{
+        max-width:900px;
+        margin:auto;
+      }
+  
+      h1{
+        font-size:24px;
+      }
+  
+      .step{
+        margin-top:40px;
+      }
+  
+      .step{
+        display:none;
+      }
+  
+      .step.active{
+        display:block;
+      }
+  
+      .card{
+        background:white;
+        padding:20px;
+        border-radius:10px;
+        margin-bottom:20px;
+        box-shadow:0 2px 6px rgba(0,0,0,0.08);
+      }
+  
+      .card h3{
+        margin-top:0;
+      }
+  
+      .row{
+        display:flex;
+        gap:10px;
+        margin-bottom:10px;
+      }
+  
+      .row input,
+      .row select,
+      .full-width input,
+      .full-width select,
+      textarea{
+        width:100%;
+        padding:8px;
+        box-sizing:border-box;
+      }
+  
+      label{
+        font-size:14px;
+        display:block;
+        margin-bottom:5px;
+      }
+  
+      button{
+        padding:10px 16px;
+        border:none;
+        border-radius:6px;
+        background:#2e7d32;
+        color:white;
+        cursor:pointer;
+      }
+  
+      .add-btn{
+        background:#ddd;
+        color:#333;
+      }
+  
+      .circle-plus{
+        width:24px;
+        height:24px;
+        border-radius:50%;
+        border:1px solid #2e7d32;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        color:#2e7d32;
+        font-weight:bold;
+        font-size:16px;
+        cursor:pointer;
+        margin-right:8px;
+      }
+  
+      .circle-plus{
+        width:24px;
+        height:24px;
+        border-radius:50%;
+        border:1px solid #2e7d32;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        color:#2e7d32;
+        font-weight:bold;
+        font-size:16px;
+        cursor:pointer;
+        margin-right:8px;
+      }
+  
+      .full-width{
+        margin-bottom:10px;
+      }
+  
+      .muted{
+        font-size:12px;
+        color:#777;
+      }
+  
+      .input-error{
+        border-color:#d32f2f !important;
+        outline:none;
+      }
+  
+      .input-error-text{
+        color:#d32f2f;
+        font-size:12px;
+        margin-top:4px;
+      }
+  
+      .subtitle{
+        font-size:13px;
+        font-weight:bold;
+        margin:15px 0 5px;
+      }
+  
+      .inline-options{
+        display:flex;
+        flex-wrap:wrap;
+        gap:15px;
+        margin:5px 0 10px;
+      }
+  
+      .section-title{
+        font-size:18px;
+        margin:0 0 10px;
+      }
+  
+      .step-header{
+        display:flex;
+        align-items:center;
+        gap:10px;
+      }
+  
+      .step-number{
+        font-weight:bold;
+        font-size:18px;
+        color:#777;
+      }
+  
+      .nowrap{
+        white-space:nowrap;
+      }
+  
+      .flex-line{
+        display:flex;
+        align-items:center;
+        gap:10px;
+      }
+  
+      .flex-line label{
+        margin-bottom:0;
+      }
+  
+      .step-nav{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin:25px 0 10px;
+      }
+  
+      .step-nav .left,
+      .step-nav .right{
+        display:flex;
+        gap:10px;
+        align-items:center;
+      }
+  
+      .step-nav .progress{
+        font-size:13px;
+        color:#666;
+        white-space:nowrap;
+      }
+  
+      .btn-secondary{
+        background:#ddd;
+        color:#333;
+      }
+  
+      button:disabled{
+        opacity:0.55;
+        cursor:not-allowed;
+      }
+  
+      .add-action{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        cursor:pointer;
+        user-select:none;
+      }
+  
+      .add-action span:last-child{
+        line-height:1.2;
+      }
+  
+      .card_wrapper{
+        position:relative;
+        border:1px solid rgba(0,0,0,0.06);
+        border-radius:10px;
+        padding:16px;
+        margin-top:12px;
+        background:#fff;
+      }
+  
+      .button_remove{
+        position:absolute;
+        top:10px;
+        right:10px;
+        width:28px;
+        height:28px;
+        border-radius:50%;
+        border:1px solid rgba(0,0,0,0.12);
+        background:#fff;
+        color:#555;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+      }
+  
+      .fit{
+        display: flex;
+        align-items: center;
+      }
+  
+      .inner_card{
+          margin-left:20px;
+          padding: 10px;
+          border-radius: 10px;
+          background-color: #eeeeee;
+      }
+  
+      .form-add-founder{
+        max-width: 720px;
+        margin: 0 auto;
+        background: #f5f5f5;
+        padding: 24px;
+        border-radius: 10px;
+      }
+      .form-add-founder h2{
+        margin: 0 0 20px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .form-add-founder .notice-block{
+        color: #c62828;
+        font-size: 13px;
+        margin-bottom: 16px;
+        font-weight: 500;
+      }
+      .form-add-founder .field-row{
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+        align-items: flex-end;
+      }
+      .form-add-founder .field-row .field{ flex: 1; }
+      .form-add-founder .field-row .field--short{ flex: 0 0 120px; }
+      .form-add-founder label{
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+      }
+      .form-add-founder input[type="text"],
+      .form-add-founder input[type="email"],
+      .form-add-founder input[type="tel"],
+      .form-add-founder select,
+      .form-add-founder textarea{
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+      .form-add-founder textarea{
+        min-height: 72px;
+        resize: vertical;
+      }
+      .form-add-founder .contact-row{
+        display: grid;
+        grid-template-columns: 80px 1fr 100px 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .form-add-founder .compliance-section{
+        margin-top: 20px;
+      }
+      .form-add-founder .compliance-section h3{
+        font-size: 14px;
+        margin: 0 0 12px;
+      }
+      .form-add-founder .compliance-item{
+        margin-bottom: 10px;
+      }
+      .form-add-founder .compliance-item .question{
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+      .form-add-founder .compliance-item .radios{
+        display: flex;
+        gap: 16px;
+      }
+      .form-add-founder .compliance-item label{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 0;
+        cursor: pointer;
+      }
+      .form-add-founder-jur { margin-top: 32px; }
+      .form-add-founder-jur .foreign-error {
+        color: #c62828;
+        font-size: 12px;
+        font-weight: bold;
+        margin-top: 4px;
+      }
+      .form-add-founder-jur .foreign-error.hidden { display: none; }
+      .form-add-founder-jur input.has-error { border-color: #c62828; }
+      .form-add-founder-jur .founders-section { margin-top: 20px; }
+      .form-add-founder-jur .founders-section h3 { font-size: 14px; margin: 0 0 6px; }
+      .form-add-founder-jur .founders-attention { color: #666; font-size: 12px; }
+      .form-add-founder-jur .radios-inline { display: flex; gap: 16px; margin-bottom: 12px; }
+      .form-add-founder-jur .radios-inline label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+    </style>
+  </head>
+  
+  <body>
+  
+  <div class="container">
+    <div class="form-add-founder card">
+      <p id="founder-registration-block" class="notice-block" style="display: none;">НЕВОЗМОЖНОСТЬ РЕГИСТРАЦИИ</p>
+      <h2>ДОБАВЛЕНИЕ УЧРЕДИТЕЛЯ СМИ «МЕДИА ПЛЮС» – ФИЗИЧЕСКОГО ЛИЦА:</h2>
+  
+      <div class="full-width">
+        <label>Ф.И.О.</label>
+        <input type="text" id="founder-fio" placeholder="Фамилия, имя, отчество">
+      </div>
+  
+      <div class="field-row">
+        <div class="field">
+          <label>Гражданство:</label>
+          <select id="founder-citizenship">
+            <option value="">Выбрать гражданство</option>
+            <option value="Республика Беларусь">Республика Беларусь</option>
+            <option value="Российская Федерация">Российская Федерация</option>
+            <option value="Латвия">Латвия</option>
+            <option value="Литва">Литва</option>
+            <option value="Эстония">Эстония</option>
+            <option value="Польша">Польша</option>
+          </select>
+        </div>
+        <div class="field field--short">
+          <label>Доля в уставном фонде, %</label>
+          <input type="text" id="founder-share" inputmode="numeric" placeholder="%">
+        </div>
+      </div>
+  
+      <div class="full-width">
+        <label>Адрес</label>
+        <textarea id="founder-address" placeholder="почтовый индекс, область, район, город/населенный пункт, улица (проспект, переулок и т.д.), номер дома, корпус, квартира/офис"></textarea>
+      </div>
+  
+      <p class="subtitle">Контактные данные:</p>
+      <div class="contact-row">
+        <div>
+          <label>Код</label>
+          <input type="tel" id="founder-phone-code" inputmode="numeric" placeholder="Код">
+        </div>
+        <div>
+          <label>Телефон</label>
+          <input type="tel" id="founder-phone" placeholder="Номер">
+        </div>
+        <div>
+          <label>Факс</label>
+          <input type="text" id="founder-fax" placeholder="Факс">
+        </div>
+        <div>
+          <label>Email</label>
+          <input type="email" id="founder-email" placeholder="Email">
+        </div>
+      </div>
+  
+      <div class="compliance-section">
+        <h3>Выберите ответ для каждого пункта:</h3>
+  
+        <div class="compliance-item">
+          <div class="question">Отбываю наказание по приговору суда</div>
+          <div class="radios">
+            <label><input type="radio" name="founder-punishment" value="yes"> да</label>
+            <label><input type="radio" name="founder-punishment" value="no" checked=""> нет</label>
+          </div>
+        </div>
+  
+        <div class="compliance-item">
+          <div class="question">Признан решением суда недееспособным</div>
+          <div class="radios">
+            <label><input type="radio" name="founder-incapable" value="yes"> да</label>
+            <label><input type="radio" name="founder-incapable" value="no" checked=""> нет</label>
+          </div>
+        </div>
+  
+        <div class="compliance-item">
+          <div class="question">Лишен в установленном порядке права заниматься деятельностью, связанной с производством и выпуском</div>
+          <div class="radios">
+            <label><input type="radio" name="founder-revocation" value="yes"> да</label>
+            <label><input type="radio" name="founder-revocation" value="no" checked=""> нет</label>
+          </div>
+        </div>
+  
+        <div class="compliance-item">
+          <div class="question">На момент государственной регистрации (перерегистрации) средства массовой информации не прошло трех лет со дня вступления в силу решения суда о прекращении выпуска средства массовой информации, учредителем которого являлся</div>
+          <div class="radios">
+            <label><input type="radio" name="founder-three-years" value="yes"> да</label>
+            <label><input type="radio" name="founder-three-years" value="no" checked=""> нет</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="form-add-founder form-add-founder-jur card">
+      <h2>ДОБАВЛЕНИЕ УЧРЕДИТЕЛЯ СМИ «МЕДИА ПЛЮС» – ЮРИДИЧЕСКОГО ЛИЦА:</h2>
+  
+      <div class="radios-inline">
+        <span>Является ли государственным органом (организацией)</span>
+        <label><input type="radio" name="jur-is-state" value="yes"> да</label>
+        <label><input type="radio" name="jur-is-state" value="no" checked=""> нет</label>
+      </div>
+  
+      <div class="full-width">
+        <label>Полное наименование юридического лица:</label>
+        <input type="text" id="jur-name" placeholder="Наименование">
+      </div>
+  
+      <div class="field-row">
+        <div class="field">
+          <label>Резидент какой страны:</label>
+          <select id="jur-country">
+            <option value="">Выбрать страну</option>
+            <option value="Республика Беларусь">Республика Беларусь</option>
+            <option value="Российская Федерация">Российская Федерация</option>
+            <option value="Латвия">Латвия</option>
+            <option value="Литва">Литва</option>
+            <option value="Эстония">Эстония</option>
+            <option value="Польша">Польша</option>
+          </select>
+        </div>
+        <div class="field field--short">
+          <label>Доля иностранного участия в уставном фонде, %</label>
+          <input type="text" id="jur-foreign-pct" inputmode="numeric" placeholder="%">
+          <p id="jur-foreign-error" class="foreign-error hidden">ВНИМАНИЕ! РЕГИСТРАЦИЯ НЕВОЗМОЖНА! НЕ БОЛЕЕ 20% ИНОСТРАННОГО УЧАСТИЯ</p>
+        </div>
+      </div>
+  
+      <div class="full-width">
+        <label>Адрес</label>
+        <p class="muted" style="margin: 0 0 4px;">почтовый индекс, область, район, город/населенный пункт, улица (проспект, переулок и т.д.), номер дома, корпус, квартира/офис</p>
+        <textarea id="jur-address" placeholder="Адрес"></textarea>
+      </div>
+  
+      <p class="subtitle">Контактные данные:</p>
+      <div class="contact-row">
+        <div>
+          <label>Код</label>
+          <input type="tel" id="jur-phone-code" inputmode="numeric" placeholder="Код">
+        </div>
+        <div>
+          <label>Телефон</label>
+          <input type="tel" id="jur-phone" placeholder="Номер">
+        </div>
+        <div>
+          <label>Факс</label>
+          <input type="text" id="jur-fax" placeholder="Факс">
+        </div>
+        <div>
+          <label>Email</label>
+          <input type="email" id="jur-email" placeholder="Email">
+        </div>
+      </div>
+  
+      <div class="founders-section">
+        <h3>УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</h3>
+        <p class="founders-attention">ВНИМАНИЕ! Сумма долей всех учредителей должна составлять 100%</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    (function () {
+      var block = document.getElementById('founder-registration-block');
+      var radios = document.querySelectorAll('.form-add-founder:not(.form-add-founder-jur) input[type="radio"][value="yes"]');
+      function check() {
+        var anyYes = Array.prototype.some.call(radios, function (r) { return r.checked; });
+        block.style.display = anyYes ? 'block' : 'none';
+      }
+      radios.forEach(function (r) { r.addEventListener('change', check); });
+    })();
+    (function () {
+      var input = document.getElementById('jur-foreign-pct');
+      var errEl = document.getElementById('jur-foreign-error');
+      if (!input || !errEl) return;
+      function check() {
+        var val = parseFloat(input.value.replace(',', '.'), 10);
+        var over = !isNaN(val) && val > 20;
+        errEl.classList.toggle('hidden', !over);
+        input.classList.toggle('has-error', over);
+      }
+      input.addEventListener('input', check);
+      input.addEventListener('blur', check);
+    })();
+  </script>
+  
+  
+  </body></html>

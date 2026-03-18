@@ -404,6 +404,7 @@ function toggleActive(target){
 
     // Делаем функцию проверки всех шагов доступной снаружи
     window._validateAllSteps = validateAllSteps;
+    window.validateField = validateField;
 })();
 
 // Сборка JSON по data-path

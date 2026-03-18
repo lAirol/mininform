@@ -1235,9 +1235,9 @@ const sponsors_financing = function () {
                     `}
 
                     <p class="subtitle">ФОРМА УЧАСТИЯ В ФИНАНСИРОВАНИИ:</p>
-                    <p class="form-hint">ВНИМАНИЕ! Оставьте заполненным по умолчанию или введите другую форму финансирования</p>
+                    <p class="form-hint">посредством участия в уставном фонде юридического лица, на которое возложены функции редакции средства массовой информации, другая форма</p>
                     <div class="full-width">
-                        <textarea data-path="${p}.participationForm" rows="4" required>Посредством участия в уставном фонде юридического лица, на которое возложены функции редакции средства массовой информации
+                        <textarea data-path="${p}.participationForm" rows="4" required>
                         </textarea>
                     </div>
 

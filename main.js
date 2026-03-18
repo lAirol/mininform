@@ -367,7 +367,7 @@ function toggleActive(target){
 
         progress.textContent = `ШАГ ${current + 1} из ${steps.length}`;
         prevBtn.disabled = current === 0;
-        nextBtn.textContent = current === steps.length - 1 ? 'Готово' : 'Далее';
+        nextBtn.textContent = current === steps.length - 1 ? 'Готово' : 'дальше';
 
         if (scroll) {
             steps[current].scrollIntoView({ behavior: 'smooth', block: 'start' });

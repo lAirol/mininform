@@ -78,6 +78,52 @@
       cursor:pointer;
     }
 
+    /* Navigation buttons (screenshot #1) */
+    #stepNav #prevStep,
+    #stepNav #nextStep{
+      height:36px;
+      padding:0 18px;
+      border-radius:999px;
+      font-weight:600;
+      letter-spacing:0.2px;
+    }
+    #stepNav #prevStep{
+      background:#fff;
+      color:#2e7d32;
+      border:1px solid #cfe6d2;
+    }
+    #stepNav #nextStep{
+      background:#1f6a2a;
+      color:#fff;
+      border:1px solid #1f6a2a;
+    }
+    #stepNav #prevStep:hover{ background:#f3faf4; }
+    #stepNav #nextStep:hover{ background:#1a5a23; border-color:#1a5a23; }
+
+    /* Save / Cancel inside forms (screenshot #2) */
+    .form-footer-actions .btn-save-founder,
+    .form-footer-actions .btn-cancel-founder{
+      height:30px;
+      padding:0 14px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:0.4px;
+    }
+    .form-footer-actions .btn-save-founder{
+      background:#1f6a2a;
+      border:1px solid #1f6a2a;
+      color:#fff;
+    }
+    .form-footer-actions .btn-cancel-founder{
+      background:#fff;
+      border:1px solid #cfe6d2;
+      color:#2e7d32;
+    }
+    .form-footer-actions .btn-save-founder:hover{ background:#1a5a23; border-color:#1a5a23; }
+    .form-footer-actions .btn-cancel-founder:hover{ background:#f3faf4; }
+
     .add-btn{
       background:#ddd;
       color:#333;
@@ -1089,7 +1135,7 @@
   <div class="card step-nav" id="stepNav">
     <div class="left">
       <button type="button" class="btn-secondary" id="prevStep">Назад</button>
-      <button type="button" id="nextStep">Далее</button>
+      <button type="button" id="nextStep">дальше</button>
     </div>
     <div class="right">
       <div class="progress" id="stepProgress">ШАГ 2 из 7</div>
@@ -1464,7 +1510,7 @@
 
       progress.textContent = `ШАГ ${current + 1} из ${steps.length}`;
       prevBtn.disabled = current === 0;
-      nextBtn.textContent = current === steps.length - 1 ? 'Готово' : 'Далее';
+      nextBtn.textContent = current === steps.length - 1 ? 'Готово' : 'дальше';
 
       if (scroll) {
         steps[current].scrollIntoView({ behavior: 'smooth', block: 'start' });

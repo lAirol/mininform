@@ -97,8 +97,8 @@ const physical_person_founder = function () {
                     </div>
 
                     <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-                        <button type="button" class="btn-save-founder" style="background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer;">Добавить</button>
-                        <button type="button" class="btn-cancel-founder" style="background: #dc3545; color: white; padding: 10px 20px; border: none; cursor: pointer;">Отмена</button>
+                        <button type="button" class="btn-save-founder">Сохранить</button>
+                        <button type="button" class="btn-cancel-founder">Отменить</button>
                     </div>
                 </div>
             </div>`;
@@ -363,8 +363,8 @@ const jur_person_founder = function () {
                     </div>
 
                     <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-                        <button type="button" class="btn-save-founder" style="background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer;">Добавить</button>
-                        <button type="button" class="btn-cancel-founder" style="background: #dc3545; color: white; padding: 10px 20px; border: none; cursor: pointer;">Отмена</button>
+                        <button type="button" class="btn-save-founder">Сохранить</button>
+                        <button type="button" class="btn-cancel-founder">Отменить</button>
                     </div>
                 </div>
             </div>`;
@@ -743,8 +743,8 @@ const office_owners = function () {
                             </div>
                         </div>` : ''}
                         <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-                            <button type="button" class="btn-save-founder" style="background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer;">Добавить</button>
-                            <button type="button" class="btn-cancel-founder" style="background: #dc3545; color: white; padding: 10px 20px; border: none; cursor: pointer;">Отмена</button>
+                            <button type="button" class="btn-save-founder">Сохранить</button>
+                            <button type="button" class="btn-cancel-founder">Отменить</button>
                         </div>
                     </div>
                 </div>
@@ -1175,8 +1175,8 @@ const sponsors_financing = function () {
                     </div>
 
                     <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-                        <button type="button" class="btn-save-founder" style="background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer;">Добавить</button>
-                        <button type="button" class="btn-cancel-founder" style="background: #dc3545; color: white; padding: 10px 20px; border: none; cursor: pointer;">Отмена</button>
+                        <button type="button" class="btn-save-founder">Сохранить</button>
+                        <button type="button" class="btn-cancel-founder">Отменить</button>
                     </div>
                 </div>
             </div>`;

@@ -188,6 +188,10 @@ const physical_person_founder = function () {
                 if (validateFounderForm(card)) {
                     toggleState(card, 'saved');
                     FILLER_LIST.style.display = 'none';
+                    let elem = card.querySelector('.physical-founder-title');
+                    if (elem) {
+                        elem.innerText = "Редактированое учредителя СМИ – физическое лицо";
+                    }
                 } else {
                     card.querySelector('.input-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -542,6 +546,10 @@ const jur_person_founder = function () {
                     if (validateFounderForm(card)) {
                         toggleState(card, 'saved');
                         if (FILLER_LIST) FILLER_LIST.style.display = 'none';
+                        let elem = document.querySelector(".jur-founder-title");
+                        if (elem) {
+                            elem.innerHTML = "Редактирование учредителя СМИ – юридическое лицо";
+                        }
                     } else {
                         card.querySelector('.input-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
@@ -698,6 +706,7 @@ const office_owners = function () {
             <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}" data-state="editing">
                 <div class="office-owner-preview founder-preview" style="display: none;">
                     <div class="founder-preview-info">
+                        <span class="owner-percent-text"></span>
                         <span class="founder-icon">${isJur ? JUR_ICON : '👤'}</span>
                         <span class="founder-name-text">Новый собственник</span>
                     </div>
@@ -874,10 +883,16 @@ const office_owners = function () {
         const preview = item.querySelector('.office-owner-preview');
         const form = item.querySelector('.nested-founder-fields.office-owner-form');
         const nameInput = item.querySelector('[data-path$=".name"]');
+        const percentInput = item.querySelector('[data-path$=".capitalPercent"]');
         const nameDisplay = item.querySelector('.office-owner-preview .founder-name-text');
+        const percentDisplay = item.querySelector('.office-owner-preview .owner-percent-text');
         if (!preview || !form) return;
         if (state === 'saved') {
-            if (nameDisplay) nameDisplay.textContent = nameInput?.value?.trim() || 'Без имени';
+            const name = nameInput?.value?.trim() || 'Без имени';
+            const percentRaw = percentInput?.value;
+            const percent = percentRaw && percentRaw.trim() !== '' ? `${percentRaw}%` : '';
+            if (nameDisplay) nameDisplay.textContent = name;
+            if (percentDisplay) percentDisplay.textContent = percent;
             updateOwnerStateOrgUI(item);
             preview.style.display = 'flex';
             form.style.display = 'none';
@@ -1209,6 +1224,11 @@ const sponsors_financing = function () {
         if (!preview || !form) return;
 
         if (state === 'saved') {
+            const titleEl = card.querySelector('.sponsor-title');
+            if (titleEl) {
+                const isFiz = card.querySelector('input[data-path$=".typeFace"][value="fizFace"]');
+                titleEl.textContent = `РЕДАКТИРОВАНИЕ ИСТОЧНИКА ФИНАНСИРОВАНИЯ – ${isFiz ? 'ФИЗИЧЕСКОГО ЛИЦА' : 'ЮРИДИЧЕСКОГО ЛИЦА'}:`;
+            }
             if (nameDisplay) nameDisplay.textContent = nameInput?.value || 'Без имени';
             preview.style.display = 'flex';
             form.style.display = 'none';

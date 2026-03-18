@@ -307,6 +307,17 @@
       padding: 20px;
       box-sizing: border-box;
     }
+
+    /* Saved state: show as compact row list (like screenshot #2) */
+    .form-add-founder[data-state="saved"],
+    .card-sponsor[data-state="saved"] {
+      padding: 0;
+      margin-bottom: 10px;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      max-width: none;
+    }
     .form-add-founder.card-physical-founder .button_remove,
     .form-add-founder.card-jur-founder .button_remove,
     .card-sponsor .button_remove{
@@ -434,16 +445,47 @@
     }
 
     .founder-preview {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
     }
-  .founder-preview-info { display: flex; align-items: center; gap: 10px; font-weight: bold; }
-  .founder-icon { font-size: 20px; }
+    .founder-preview-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+    .founder-icon { font-size: 18px; }
+    .founder-preview-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .founder-preview-actions .button_edit_founder,
+    .founder-preview-actions .button_remove_founder {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .founder-preview-actions .button_edit_founder:hover,
+    .founder-preview-actions .button_remove_founder:hover {
+      color: #111827;
+      border-color: #d1d5db;
+      background: #f9fafb;
+    }
   </style>
 </head>
 
@@ -719,7 +761,7 @@
         </label>
         <h7>Образование:</h7>
 
-        <div class="full-width">
+        <div class="row">
             <div>
                 <label>Учебное заведение, которое окончил главный редактор (редактор), год поступления(окончания)</label>
                 <input type="text" data-path="office.chiefEditor.institution" required="">
@@ -727,7 +769,7 @@
         </div>
 
         <h7>Сведения о работе на руководящих должностях:</h7>
-        <div class="full-width">
+        <div class="row">
             <div>
                 <label>Место работы, должность, период работы</label>
                 <input type="text" data-path="office.chiefEditor.formerJobInfo" required="">

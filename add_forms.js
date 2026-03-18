@@ -22,8 +22,8 @@ const physical_person_founder = function () {
                         <span class="founder-name-text">Новый учредитель</span>
                     </div>
                     <div class="founder-preview-actions">
-                        <button type="button" class="button_edit_founder" title="Редактировать">✏️ Редактировать</button>
-                        <button type="button" class="button_remove_founder" title="Удалить">🗑️ Удалить</button>
+                        <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать">✏️</button>
+                        <button type="button" class="button_remove_founder" title="Удалить" aria-label="Удалить">✕</button>
                     </div>
                 </div>
 
@@ -315,8 +315,8 @@ const jur_person_founder = function () {
                         <span class="founder-name-text">Новый учредитель</span>
                     </div>
                     <div class="founder-preview-actions">
-                        <button type="button" class="button_edit_founder" title="Редактировать">✏️ Редактировать</button>
-                        <button type="button" class="button_remove_founder" title="Удалить">🗑️ Удалить</button>
+                        <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать">✏️</button>
+                        <button type="button" class="button_remove_founder" title="Удалить" aria-label="Удалить">✕</button>
                     </div>
                 </div>
 
@@ -702,8 +702,8 @@ const office_owners = function () {
                         <span class="founder-name-text">Новый собственник</span>
                     </div>
                     <div class="founder-preview-actions">
-                        <button type="button" class="button_edit_founder" title="Редактировать">✏️ Редактировать</button>
-                        <button type="button" class="button_remove_founder" title="Удалить">🗑️ Удалить</button>
+                        <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать">✏️</button>
+                        <button type="button" class="button_remove_founder" title="Удалить" aria-label="Удалить">✕</button>
                     </div>
                 </div>
                 <div class="nested-founder-fields office-owner-form">
@@ -1122,8 +1122,8 @@ const sponsors_financing = function () {
                         <span class="founder-name-text">Новый спонсор</span>
                     </div>
                     <div class="founder-preview-actions">
-                        <button type="button" class="button_edit_founder" title="Редактировать">✏️ Редактировать</button>
-                        <button type="button" class="button_remove_founder" title="Удалить">🗑️ Удалить</button>
+                        <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать">✏️</button>
+                        <button type="button" class="button_remove_founder" title="Удалить" aria-label="Удалить">✕</button>
                     </div>
                 </div>
 

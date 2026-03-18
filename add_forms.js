@@ -335,8 +335,9 @@ const jur_person_founder = function () {
                             <select data-path="${path}.country" required>${COUNTRY_OPTIONS}</select>
                         </div>
                         <div class="field field--short">
-                            <label>Доля, %</label>
-                            <input type="number" step="0.01" inputmode="decimal" data-path="${path}.capitalPercent" class="founder-capital-percent" required>
+                            <label>Доля в уставном фонде, %</label>
+                            <input type="number" step="0.01" data-path="${path}.capitalPercent" 
+                            class="founder-capital-percent" inputmode="numeric" data-validate="percent" required>
                         </div>
                     </div>
                     ${isJur ? `
@@ -385,7 +386,10 @@ const jur_person_founder = function () {
 
                     <div class="row">
                         <div class="field"><label>Страна:</label><select data-path="${p}.country" required>${COUNTRY_OPTIONS}</select></div>
-                        <div class="field field--short"><label>Доля, %</label><input type="number" step="0.01" data-path="${p}.capitalPercent" class="founder-capital-percent" required></div>
+                        <div class="field field--short">
+                        <label>Доля иностранного участия в уставном фонде, %</label>
+                        <input type="number"  step="0.01" data-path="${p}.capitalPercent" class="founder-capital-percent" 
+                        inputmode="numeric" data-validate="percent" data-max-percent="20" required></div>
                     </div>
 
                     <div class="full-width">
@@ -394,8 +398,8 @@ const jur_person_founder = function () {
                     </div>
 
                     <div class="contact-row">
-                        <div><label>Код</label><input type="tel" data-path="${p}.phoneCode" required></div>
-                        <div><label>Телефон</label><input type="tel" data-path="${p}.phone" required></div>
+                        <div><label>Код</label><input type="tel" data-path="${p}.phoneCode" data-validate="phoneCode" required></div>
+                        <div><label>Телефон</label><input type="tel" data-path="${p}.phone" data-validate="phone" required></div>
                         <div><label>Факс</label><input type="text" data-path="${p}.fax"></div>
                         <div><label>Email</label><input type="email" data-path="${p}.email" required></div>
                     </div>
@@ -782,7 +786,8 @@ const office_owners = function () {
                             </div>
                             <div class="field field--short">
                                 <label>Доля, %</label>
-                                <input type="number" step="0.01" inputmode="decimal" data-path="${path}.capitalPercent" class="founder-capital-percent" required>
+                                <input type="number" step="0.01" inputmode="decimal" data-path="${path}.capitalPercent" class="founder-capital-percent" 
+                                inputmode="numeric" data-validate="percent" required>
                             </div>
                         </div>
                         ${isJur ? `
@@ -1083,35 +1088,36 @@ const domain_owner_container = function () {
         <div class="row">
           <div>
             <label>${isFiz ? 'Фамилия, собственное имя, отчество (если таковое имеется) гражданина' : 'Полное наименование юридического лица'}</label>
-            <input type="text" data-path="domainOwner.name">
+            <input type="text" data-path="domainOwner.name" required>
           </div>
           <div>
             <label>Резидент какой страны</label>
-            <input type="text" data-path="domainOwner.country">
+            <input type="text" data-path="domainOwner.country" required>
           </div>
         </div>
 
         ${isFiz ? '' : `
           <div class="full-width">
             <label>Доля иностранного участия в уставном фонде, %</label>
-            <input type="number" data-path="domainOwner.capitalPercent"  data-validate="percent">
+            <input type="number" data-path="domainOwner.capitalPercent" inputmode="numeric" data-validate="percent" data-max-percent="20" required>
+           
           </div>
         `}
 
         <div class="full-width">
           <label>Адрес (почтовый индекс, область, район, город, населенный пункт, улица, номер дома, корпус, квартира/офис)</label>
-          <input type="text" data-path="domainOwner.address">
+          <input type="text" data-path="domainOwner.address" required>
         </div>
 
         <label>Контактный телефон</label>
         <div class="row">
           <div>
             <label>Код:</label>
-            <input type="tel" inputmode="numeric" data-path="domainOwner.phoneCode">
+            <input type="tel" inputmode="numeric" data-path="domainOwner.phoneCode" required>
           </div>
           <div>
             <label>Телефон:</label>
-            <input type="tel" data-path="domainOwner.phone">
+            <input type="tel" data-path="domainOwner.phone" required>
           </div>
           <div>
             <label>Факс</label>
@@ -1119,7 +1125,7 @@ const domain_owner_container = function () {
           </div>
           <div>
             <label>Адрес электронной почты</label>
-            <input type="email" data-path="domainOwner.email">
+            <input type="email" data-path="domainOwner.email" required>
           </div>
         </div>
 
@@ -1202,7 +1208,8 @@ const sponsors_financing = function () {
                         </div>
                         <div class="field field--short">
                             <label>Доля в уставном фонде, %</label>
-                            <input type="number" step="0.01" inputmode="decimal" data-path="${p}.shareInCapital" required>
+                            <input type="number" step="0.01" inputmode="decimal" data-path="${p}.shareInCapital" 
+                            inputmode="numeric" data-validate="percent" required>
                         </div>
                     </div>
                     <div class="full-width">
@@ -1221,7 +1228,8 @@ const sponsors_financing = function () {
                         </div>
                         <div class="field field--short">
                             <label>Доля в уставном фонде, %</label>
-                            <input type="number" step="0.01" inputmode="decimal" data-path="${p}.shareInCapital" required>
+                            <input type="number" step="0.01" inputmode="decimal" data-path="${p}.shareInCapital" 
+                            inputmode="numeric" data-validate="percent" required>
                         </div>
                     </div>
                     `}

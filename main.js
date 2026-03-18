@@ -472,15 +472,17 @@ function buildJsonFromForm(container) {
 }
 
 function mergeFounders(obj) {
-    if (!obj || !Array.isArray(obj.founders) || !Array.isArray(obj.founders_phys)) {
-        return obj;
+    obj = obj || {};
+
+    const founders = Array.isArray(obj.founders) ? obj.founders : [];
+
+    const foundersPhys = Array.isArray(obj.founders_phys) ? obj.founders_phys : [];
+
+    obj.founders = [...founders, ...foundersPhys];
+
+    if (obj.hasOwnProperty('founders_phys')) {
+        delete obj.founders_phys;
     }
-
-    // Добавляем все элементы из founders_phys в founders
-    obj.founders.push(...obj.founders_phys);
-
-    // Удаляем поле founders_phys
-    delete obj.founders_phys;
 
     return obj;
 }

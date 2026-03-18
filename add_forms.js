@@ -94,10 +94,11 @@ const physical_person_founder = function () {
                                 <div class="question">На момент регистрации СМИ не прошло трех лет со дня прекращения выпуска СМИ, учредителем которого являлся</div>
                             </div>
                         </div>
+                        <div class="compliance-warning" aria-live="polite" style="display:none;color:#b00020;margin-top:10px;"></div>
                     </div>
 
                     <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-                        <button type="button" class="btn-save-founder">Сохранить</button>
+                        <button type="button" class="btn-save-founder">Добавить учредителя сми</button>
                         <button type="button" class="btn-cancel-founder">Отменить</button>
                     </div>
                 </div>
@@ -166,6 +167,31 @@ const physical_person_founder = function () {
         });
     }
 
+    function updateComplianceState(card) {
+        if (!card) return;
+        const yesRadios = card.querySelectorAll('.compliance-section input[type="radio"][value="true"]');
+        let hasAnyYes = false;
+        yesRadios.forEach(radio => {
+            if (radio.checked) hasAnyYes = true;
+        });
+
+        const saveBtn = card.querySelector('.btn-save-founder');
+        const warningEl = card.querySelector('.compliance-warning');
+
+        if (saveBtn) {
+            saveBtn.disabled = hasAnyYes;
+        }
+        if (warningEl) {
+            if (hasAnyYes) {
+                warningEl.style.display = 'block';
+                warningEl.textContent = 'Нельзя добавить учредителя: по указанным ограничениям все ответы должны быть «нет».';
+            } else {
+                warningEl.style.display = 'none';
+                warningEl.textContent = '';
+            }
+        }
+    }
+
     function init() {
         const container = getContainer();
         const addButtons = document.querySelectorAll(ADD_BUTTON_SELECTOR);
@@ -175,6 +201,10 @@ const physical_person_founder = function () {
                 const index = container.querySelectorAll('.card-physical-founder').length;
                 if (FILLER_LIST) FILLER_LIST.style.display = 'none';
                 container.insertAdjacentHTML('beforeend', buildFormCard(index));
+                const newCard = container.querySelector(`.card-physical-founder[data-physical-person-index="${index}"]`);
+                if (newCard) {
+                    updateComplianceState(newCard);
+                }
             });
         });
 
@@ -185,6 +215,11 @@ const physical_person_founder = function () {
             if (!card) return;
 
             if (target.classList.contains('btn-save-founder')) {
+                // Дополнительная защита: не даем сохранить, если выбрано хоть одно «да»
+                updateComplianceState(card);
+                if (card.querySelector('.btn-save-founder')?.disabled) {
+                    return;
+                }
                 if (validateFounderForm(card)) {
                     toggleState(card, 'saved');
                     FILLER_LIST.style.display = 'none';
@@ -213,6 +248,15 @@ const physical_person_founder = function () {
             if (target.closest('.button_remove_founder')) {
                 card.remove();
                 checkContainersAndReindex();
+            }
+        });
+
+        document.addEventListener('change', (e) => {
+            const target = e.target;
+            if (!(target instanceof HTMLInputElement)) return;
+            if (target.type === 'radio' && target.closest('.card-physical-founder') && target.closest('.compliance-section')) {
+                const card = target.closest('.card-physical-founder');
+                updateComplianceState(card);
             }
         });
     }

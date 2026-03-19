@@ -12,10 +12,101 @@ const physical_person_founder = function () {
     const getContainer = () => document.getElementById(CONTAINER_ID);
     const getJurContainer = () => document.getElementById(JSUR_CONTAINER_ID);
 
+    // Сохраняем значения полей (и checked для radio/checkbox), а не DOM.
+    // Это убирает проблему, когда после restore пропадают значения select.
+    const savedStates = new WeakMap();
+
+    function snapshotSaved(card) {
+        const idx = card.getAttribute('data-physical-person-index');
+        const basePrefix = `${BASE_PATH}.${idx}.`;
+        const state = { values: {}, radios: {}, checks: {} };
+
+        card.querySelectorAll('[data-path]').forEach((el) => {
+            const path = el.getAttribute('data-path');
+            if (!path || !path.startsWith(basePrefix)) return;
+            const relKey = path.slice(basePrefix.length);
+
+            if (el.type === 'radio') {
+                if (el.checked) state.radios[relKey] = el.value;
+                return;
+            }
+
+            if (el.type === 'checkbox') {
+                state.checks[relKey] = !!el.checked;
+                return;
+            }
+
+            state.values[relKey] = el.value;
+        });
+
+        savedStates.set(card, state);
+    }
+
+    function restoreSaved(card) {
+        const state = savedStates.get(card);
+        if (!state) {
+            toggleState(card, 'saved');
+            updateComplianceState(card);
+            return;
+        }
+
+        const idx = card.getAttribute('data-physical-person-index');
+        const basePrefix = `${BASE_PATH}.${idx}.`;
+
+        card.querySelectorAll('[data-path]').forEach((el) => {
+            const path = el.getAttribute('data-path');
+            if (!path || !path.startsWith(basePrefix)) return;
+            const relKey = path.slice(basePrefix.length);
+
+            if (el.type === 'radio') {
+                if (Object.prototype.hasOwnProperty.call(state.radios, relKey)) {
+                    el.checked = el.value === state.radios[relKey];
+                }
+                return;
+            }
+
+            if (el.type === 'checkbox') {
+                if (Object.prototype.hasOwnProperty.call(state.checks, relKey)) {
+                    el.checked = !!state.checks[relKey];
+                }
+                return;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(state.values, relKey)) {
+                el.value = state.values[relKey] ?? '';
+            }
+        });
+
+        toggleState(card, 'saved');
+        updateComplianceState(card);
+    }
+
+    function reindexPhysicalCardNode(cardNode, newIndex) {
+        if (!cardNode) return;
+
+        cardNode.setAttribute('data-physical-person-index', newIndex);
+        const p = `${BASE_PATH}.${newIndex}`;
+
+        cardNode.querySelectorAll('[data-path]').forEach(el => {
+            const path = el.getAttribute('data-path');
+            if (!path) return;
+            const fieldName = path.split('.').pop();
+            el.setAttribute('data-path', `${p}.${fieldName}`);
+        });
+
+        cardNode.querySelectorAll('input[type="radio"]').forEach(radio => {
+            const name = radio.getAttribute('name');
+            if (name && name.startsWith('pp')) {
+                const suffix = name.split('_').pop();
+                radio.setAttribute('name', `pp${newIndex}_${suffix}`);
+            }
+        });
+    }
+
     function buildFormCard(index) {
         const p = `${BASE_PATH}.${index}`;
         return `
-            <div class="form-add-founder card card-physical-founder" data-physical-person-index="${index}" data-state="editing">
+            <div class="form-add-founder card card-physical-founder" data-physical-person-index="${index}" data-state="editing" data-is-new="1">
                 <div class="founder-preview" style="display: none;">
                     <div class="founder-preview-info">
                         <span class="founder-icon">👤</span>
@@ -145,25 +236,10 @@ const physical_person_founder = function () {
         if (!container) return;
         const cards = container.querySelectorAll('.card-physical-founder');
         if (cards.length === 0) {
-            FILLER_LIST.style.display = 'block';
+            if (FILLER_LIST) FILLER_LIST.style.display = 'block';
         }
         cards.forEach((card, newIndex) => {
-            card.setAttribute('data-physical-person-index', newIndex);
-            const p = `${BASE_PATH}.${newIndex}`;
-            
-            card.querySelectorAll('[data-path]').forEach(el => {
-                const path = el.getAttribute('data-path');
-                const fieldName = path.split('.').pop();
-                el.setAttribute('data-path', `${p}.${fieldName}`);
-            });
-
-            card.querySelectorAll('input[type="radio"]').forEach(radio => {
-                const name = radio.getAttribute('name');
-                if (name && name.startsWith('pp')) {
-                    const suffix = name.split('_').pop();
-                    radio.setAttribute('name', `pp${newIndex}_${suffix}`);
-                }
-            });
+            reindexPhysicalCardNode(card, newIndex);
         });
     }
 
@@ -215,13 +291,14 @@ const physical_person_founder = function () {
             if (!card) return;
 
             if (target.classList.contains('btn-save-founder')) {
-                // Дополнительная защита: не даем сохранить, если выбрано хоть одно «да»
                 updateComplianceState(card);
                 if (card.querySelector('.btn-save-founder')?.disabled) {
                     return;
                 }
                 if (validateFounderForm(card)) {
                     toggleState(card, 'saved');
+                    card.dataset.isNew = '0';
+                    snapshotSaved(card);
                     FILLER_LIST.style.display = 'none';
                     let elem = card.querySelector('.physical-founder-title');
                     if (elem) {
@@ -233,11 +310,11 @@ const physical_person_founder = function () {
             }
 
             if (target.classList.contains('btn-cancel-founder')) {
-                if (card.getAttribute('data-state') === 'editing' && !card.querySelector('[data-path$=".fullName"]').value) {
+                if (card.dataset.isNew === '1') {
                     card.remove();
                     checkContainersAndReindex();
                 } else {
-                    toggleState(card, 'saved');
+                    restoreSaved(card);
                 }
             }
 
@@ -290,6 +367,103 @@ const jur_person_founder = function () {
     const FILLER_LIST = document.getElementById("filler_2_2_list");
     const STATE_ORG_ICON = '🏛️';
     const JUR_ICON = '💼';
+
+    const savedStates = new WeakMap();
+
+    function snapshotSaved(card) {
+        const basePrefix = `${card.getAttribute('data-parent-path')}.`;
+        const state = { values: {}, radios: {}, checks: {}, nested: [] };
+
+        card.querySelectorAll('[data-path]').forEach((el) => {
+            const path = el.getAttribute('data-path');
+            if (!path || !path.startsWith(basePrefix)) return;
+            const relKey = path.slice(basePrefix.length);
+
+            if (el.type === 'radio') {
+                if (el.checked) state.radios[relKey] = el.value;
+                return;
+            }
+
+            if (el.type === 'checkbox') {
+                state.checks[relKey] = !!el.checked;
+                return;
+            }
+
+            state.values[relKey] = el.value;
+        });
+
+        const nestedItems = card.querySelectorAll('.nested-founder-item');
+        nestedItems.forEach((item) => {
+            const founderPathAbs = item.getAttribute('data-founder-path');
+            if (!founderPathAbs || !founderPathAbs.startsWith(basePrefix.replace(/\.$/, ''))) return;
+
+            const m = founderPathAbs.match(/^(.*)\.founders\.(\d+)$/);
+            if (!m) return;
+
+            const parentPathAbs = m[1];
+            const index = parseInt(m[2], 10);
+            const type = item.classList.contains('nested-founder-jur') ? 'jur' : 'fiz';
+
+            const depth = (founderPathAbs.match(/\.founders\.\d+/g) || []).length;
+
+            state.nested.push({ parentPathAbs, index, type, depth });
+        });
+
+        savedStates.set(card, state);
+    }
+
+    function restoreSaved(card) {
+        const state = savedStates.get(card);
+        if (!state) {
+            toggleState(card, 'saved');
+            return;
+        }
+
+        const rootParentPathAbs = card.getAttribute('data-parent-path');
+        const basePrefix = `${rootParentPathAbs}.`;
+
+        const listContainers = card.querySelectorAll('.nested-founders-list');
+        listContainers.forEach((listEl) => {
+            listEl.innerHTML = '';
+        });
+
+        const orderedNested = [...state.nested].sort((a, b) => a.depth - b.depth);
+        orderedNested.forEach((rec) => {
+            const listEl = card.querySelector(`.nested-founders-list[data-owner-path="${rec.parentPathAbs}"]`);
+            if (!listEl) return;
+            listEl.insertAdjacentHTML('beforeend', buildNestedItem(rec.parentPathAbs, rec.index, rec.type));
+        });
+
+        card.querySelectorAll('[data-path]').forEach((el) => {
+            const path = el.getAttribute('data-path');
+            if (!path || !path.startsWith(basePrefix)) return;
+            const relKey = path.slice(basePrefix.length);
+
+            if (el.type === 'radio') {
+                if (Object.prototype.hasOwnProperty.call(state.radios, relKey)) {
+                    el.checked = el.value === state.radios[relKey];
+                }
+                return;
+            }
+
+            if (el.type === 'checkbox') {
+                if (Object.prototype.hasOwnProperty.call(state.checks, relKey)) {
+                    el.checked = !!state.checks[relKey];
+                }
+                return;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(state.values, relKey)) {
+                el.value = state.values[relKey] ?? '';
+            }
+        });
+
+        toggleState(card, 'saved');
+
+        card.querySelectorAll('.nested-founders-block').forEach((block) => {
+            updateSum(block);
+        });
+    }
 
     const COUNTRY_OPTIONS = `
         <option value="" selected disabled hidden></option>
@@ -357,7 +531,7 @@ const jur_person_founder = function () {
     function buildFormCard(index) {
         const p = `${BASE_PATH}.${index}`;
         return `
-            <div class="form-add-founder card card-jur-founder" data-jur-person-index="${index}" data-parent-path="${p}" data-state="editing">
+            <div class="form-add-founder card card-jur-founder" data-jur-person-index="${index}" data-parent-path="${p}" data-state="editing" data-is-new="1">
                 <div class="founder-preview" style="display: none;">
                     <div class="founder-preview-info">
                         <span class="founder-icon">💼</span>
@@ -593,6 +767,8 @@ const jur_person_founder = function () {
                 if (target.classList.contains('btn-save-founder')) {
                     if (validateFounderForm(card)) {
                         toggleState(card, 'saved');
+                        card.dataset.isNew = '0';
+                        snapshotSaved(card);
                         if (FILLER_LIST) FILLER_LIST.style.display = 'none';
                         let elem = document.querySelector(".jur-founder-title");
                         if (elem) {
@@ -605,12 +781,12 @@ const jur_person_founder = function () {
                 }
 
                 if (target.classList.contains('btn-cancel-founder')) {
-                    if (card.getAttribute('data-state') === 'editing' && !card.querySelector('[data-path$=".name"]')?.value) {
+                    if (card.dataset.isNew === '1') {
                         card.remove();
                         reindexAll();
                         checkContainersAndFiller();
                     } else {
-                        toggleState(card, 'saved');
+                        restoreSaved(card);
                     }
                     return;
                 }
@@ -676,6 +852,105 @@ const office_owners = function () {
     const STATE_ORG_ICON = '🏛️';
     const JUR_ICON = '💼';
 
+    const savedStates = new WeakMap();
+
+    function snapshotSaved(card) {
+        const basePrefix = `${card.getAttribute('data-founder-path')}.`;
+        const state = { values: {}, radios: {}, checks: {}, nested: [] };
+
+        card.querySelectorAll('[data-path]').forEach((el) => {
+            const path = el.getAttribute('data-path');
+            if (!path || !path.startsWith(basePrefix)) return;
+            const relKey = path.slice(basePrefix.length);
+
+            if (el.type === 'radio') {
+                if (el.checked) state.radios[relKey] = el.value;
+                return;
+            }
+
+            if (el.type === 'checkbox') {
+                state.checks[relKey] = !!el.checked;
+                return;
+            }
+
+            state.values[relKey] = el.value;
+        });
+
+        card.querySelectorAll('.nested-founder-item').forEach((item) => {
+            const founderPathAbs = item.getAttribute('data-founder-path');
+            if (!founderPathAbs || !founderPathAbs.startsWith(card.getAttribute('data-founder-path'))) return;
+            
+            const m = founderPathAbs.match(/^(.*)\.owners\.(\d+)$/);
+            if (!m) return;
+
+            const parentPathAbs = m[1];
+            const index = parseInt(m[2], 10);
+            const type = item.classList.contains('nested-founder-jur') ? 'jur' : 'fiz';
+            const depth = (founderPathAbs.match(/\.owners\.\d+/g) || []).length;
+
+            state.nested.push({ parentPathAbs, index, type, depth });
+        });
+
+        savedStates.set(card, state);
+    }
+
+    function restoreSaved(card) {
+        const state = savedStates.get(card);
+        if (!state) {
+            toggleStateOfficeOwner(card, 'saved');
+            return;
+        }
+
+        card.dataset.isNew = '0';
+
+        const basePrefix = `${card.getAttribute('data-founder-path')}.`;
+
+        card.querySelectorAll('.nested-founders-list').forEach((listEl) => {
+            listEl.innerHTML = '';
+        });
+
+        const orderedNested = [...state.nested].sort((a, b) => a.depth - b.depth);
+        orderedNested.forEach((rec) => {
+            const listEl = card.querySelector(`.nested-founders-list[data-owner-path="${rec.parentPathAbs}"]`);
+            if (!listEl) return;
+            listEl.insertAdjacentHTML('beforeend', buildNestedItem(rec.parentPathAbs, rec.index, rec.type));
+        });
+
+        card.querySelectorAll('[data-path]').forEach((el) => {
+            const path = el.getAttribute('data-path');
+            if (!path || !path.startsWith(basePrefix)) return;
+            const relKey = path.slice(basePrefix.length);
+
+            if (el.type === 'radio') {
+                if (Object.prototype.hasOwnProperty.call(state.radios, relKey)) {
+                    el.checked = el.value === state.radios[relKey];
+                }
+                return;
+            }
+
+            if (el.type === 'checkbox') {
+                if (Object.prototype.hasOwnProperty.call(state.checks, relKey)) {
+                    el.checked = !!state.checks[relKey];
+                }
+                return;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(state.values, relKey)) {
+                el.value = state.values[relKey] ?? '';
+            }
+        });
+
+        card.querySelectorAll('.nested-founder-item.nested-founder-jur').forEach((jurItem) => {
+            updateOwnerStateOrgUI(jurItem);
+        });
+
+        toggleStateOfficeOwner(card, 'saved');
+
+        card.querySelectorAll('.nested-founders-block').forEach((block) => {
+            updateSum(block);
+        });
+    }
+
     const COUNTRY_OPTIONS = `
         <option value="" selected disabled hidden></option>
         <option>Республика Беларусь</option>
@@ -727,7 +1002,8 @@ const office_owners = function () {
                         </div>
                         <div class="field field--short">
                             <label>Доля, %</label>
-                            <input type="number" step="0.01" inputmode="decimal" data-path="${path}.capitalPercent" class="founder-capital-percent" required>
+                            <input type="number" step="0.01" inputmode="decimal" data-path="${path}.capitalPercent" class="founder-capital-percent" 
+                            inputmode="numeric" data-validate="percent" required>
                         </div>
                     </div>
                     ${isJur ? `
@@ -751,7 +1027,7 @@ const office_owners = function () {
         const radioName = 'officeState_' + path.replace(/\./g, '_');
 
         return `
-            <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}" data-state="editing">
+            <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}" data-state="editing" data-is-new="1">
                 <div class="office-owner-preview founder-preview" style="display: none;">
                     <div class="founder-preview-info">
                         <span class="owner-percent-text"></span>
@@ -962,7 +1238,8 @@ const office_owners = function () {
 
         const items = list.querySelectorAll(':scope > .nested-founder-item');
         items.forEach((item, idx) => {
-            reindexRecursive(item, `${BASE_PATH}.${SEGMENT}.${idx}`);
+            const newPrefix = `${BASE_PATH}.${SEGMENT}.${idx}`;
+            reindexRecursive(item, newPrefix);
         });
     }
 
@@ -1016,6 +1293,8 @@ const office_owners = function () {
                 if (target.classList.contains('btn-save-founder')) {
                     if (validateOfficeOwnerItem(officeItem)) {
                         toggleStateOfficeOwner(officeItem, 'saved');
+                        officeItem.dataset.isNew = '0';
+                        snapshotSaved(officeItem);
                         const block = officeItem.closest('.nested-founders-block');
                         if (block) updateSum(block);
                     } else {
@@ -1023,12 +1302,12 @@ const office_owners = function () {
                     }
                 }
                 if (target.classList.contains('btn-cancel-founder')) {
-                    const nameInput = officeItem.querySelector('[data-path$=".name"]');
-                    if (!nameInput?.value?.trim()) {
+                    if (officeItem.dataset.isNew === '1') {
                         removeOwner(officeItem);
                     } else {
-                        toggleStateOfficeOwner(officeItem, 'saved');
+                        restoreSaved(officeItem);
                     }
+                    return;
                 }
                 if (target.closest('.button_edit_founder')) {
                     toggleStateOfficeOwner(officeItem, 'editing');
@@ -1163,6 +1442,71 @@ const sponsors_financing = function () {
     const CONTAINER_ID = 'sponsors-container';
     const BASE_PATH = 'sponsors';
 
+    const savedStates = new WeakMap();
+
+    function snapshotSaved(card) {
+        const idx = card.getAttribute('data-sponsor-index');
+        const basePrefix = `${BASE_PATH}.${idx}.`;
+        const state = { values: {}, radios: {}, checks: {} };
+
+        card.querySelectorAll('[data-path]').forEach((el) => {
+            const path = el.getAttribute('data-path');
+            if (!path || !path.startsWith(basePrefix)) return;
+            const relKey = path.slice(basePrefix.length);
+
+            if (el.type === 'radio') {
+                if (el.checked) state.radios[relKey] = el.value;
+                return;
+            }
+
+            if (el.type === 'checkbox') {
+                state.checks[relKey] = !!el.checked;
+                return;
+            }
+
+            state.values[relKey] = el.value;
+        });
+
+        savedStates.set(card, state);
+    }
+
+    function restoreSaved(card) {
+        const state = savedStates.get(card);
+        if (!state) {
+            toggleSponsorState(card, 'saved');
+            return;
+        }
+
+        const idx = card.getAttribute('data-sponsor-index');
+        const basePrefix = `${BASE_PATH}.${idx}.`;
+
+        card.querySelectorAll('[data-path]').forEach((el) => {
+            const path = el.getAttribute('data-path');
+            if (!path || !path.startsWith(basePrefix)) return;
+            const relKey = path.slice(basePrefix.length);
+
+            if (el.type === 'radio') {
+                if (Object.prototype.hasOwnProperty.call(state.radios, relKey)) {
+                    el.checked = el.value === state.radios[relKey];
+                }
+                return;
+            }
+
+            if (el.type === 'checkbox') {
+                if (Object.prototype.hasOwnProperty.call(state.checks, relKey)) {
+                    el.checked = !!state.checks[relKey];
+                }
+                return;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(state.values, relKey)) {
+                el.value = state.values[relKey] ?? '';
+            }
+        });
+
+        toggleSponsorState(card, 'saved');
+    }
+
     const COUNTRY_OPTIONS = `
         <option value="" selected disabled hidden></option>
         <option>Республика Беларусь</option>
@@ -1180,7 +1524,7 @@ const sponsors_financing = function () {
         const isFiz = type === 'fiz';
 
         return `
-            <div class="card card-sponsor" data-sponsor-index="${index}" data-state="editing">
+            <div class="card card-sponsor" data-sponsor-index="${index}" data-state="editing" data-is-new="1">
                 <div class="founder-preview" style="display: none;">
                     <div class="founder-preview-info">
                         <span class="founder-icon">${isFiz ? '👤' : '💼'}</span>
@@ -1329,11 +1673,11 @@ const sponsors_financing = function () {
             if (removeBtn) {
                 const card = removeBtn.closest('.card-sponsor');
                 if (card) {
-                    if (card.getAttribute('data-state') === 'editing' && !card.querySelector('[data-path$=".name"]')?.value) {
+                    if (card.dataset.isNew === '1') {
                         card.remove();
                         reindexSponsors();
                     } else {
-                        toggleSponsorState(card, 'saved');
+                        restoreSaved(card);
                     }
                 }
                 return;
@@ -1345,6 +1689,8 @@ const sponsors_financing = function () {
             if (e.target.classList.contains('btn-save-founder')) {
                 if (validateSponsorForm(sponsorCard)) {
                     toggleSponsorState(sponsorCard, 'saved');
+                    sponsorCard.dataset.isNew = '0';
+                    snapshotSaved(sponsorCard);
                 } else {
                     sponsorCard.querySelector('.input-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -1352,11 +1698,11 @@ const sponsors_financing = function () {
             }
 
             if (e.target.classList.contains('btn-cancel-founder')) {
-                if (sponsorCard.getAttribute('data-state') === 'editing' && !sponsorCard.querySelector('[data-path$=".name"]')?.value) {
+                if (sponsorCard.dataset.isNew === '1') {
                     sponsorCard.remove();
                     reindexSponsors();
                 } else {
-                    toggleSponsorState(sponsorCard, 'saved');
+                    restoreSaved(sponsorCard);
                 }
                 return;
             }

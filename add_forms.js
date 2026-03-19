@@ -47,6 +47,7 @@ const physical_person_founder = function () {
         if (!state) {
             toggleState(card, 'saved');
             updateComplianceState(card);
+            clearValidationUI(card);
             return;
         }
 
@@ -79,6 +80,7 @@ const physical_person_founder = function () {
 
         toggleState(card, 'saved');
         updateComplianceState(card);
+        clearValidationUI(card);
     }
 
     function reindexPhysicalCardNode(cardNode, newIndex) {
@@ -416,6 +418,7 @@ const jur_person_founder = function () {
         const state = savedStates.get(card);
         if (!state) {
             toggleState(card, 'saved');
+            clearValidationUI(card);
             return;
         }
 
@@ -463,6 +466,8 @@ const jur_person_founder = function () {
         card.querySelectorAll('.nested-founders-block').forEach((block) => {
             updateSum(block);
         });
+
+        clearValidationUI(card);
     }
 
     const COUNTRY_OPTIONS = `
@@ -898,6 +903,7 @@ const office_owners = function () {
         const state = savedStates.get(card);
         if (!state) {
             toggleStateOfficeOwner(card, 'saved');
+            clearValidationUI(card);
             return;
         }
 
@@ -949,6 +955,8 @@ const office_owners = function () {
         card.querySelectorAll('.nested-founders-block').forEach((block) => {
             updateSum(block);
         });
+
+        clearValidationUI(card);
     }
 
     const COUNTRY_OPTIONS = `
@@ -1474,6 +1482,7 @@ const sponsors_financing = function () {
         const state = savedStates.get(card);
         if (!state) {
             toggleSponsorState(card, 'saved');
+            clearValidationUI(card);
             return;
         }
 
@@ -1505,6 +1514,8 @@ const sponsors_financing = function () {
         });
 
         toggleSponsorState(card, 'saved');
+
+        clearValidationUI(card);
     }
 
     const COUNTRY_OPTIONS = `
@@ -1581,8 +1592,7 @@ const sponsors_financing = function () {
                     <p class="subtitle">ФОРМА УЧАСТИЯ В ФИНАНСИРОВАНИИ:</p>
                     <p class="form-hint">посредством участия в уставном фонде юридического лица, на которое возложены функции редакции средства массовой информации, другая форма</p>
                     <div class="full-width">
-                        <textarea data-path="${p}.participationForm" rows="4" required>
-                        </textarea>
+                        <textarea data-path="${p}.participationForm" rows="4" required></textarea>
                     </div>
 
                     <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">

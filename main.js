@@ -624,3 +624,22 @@ function hide(el) {
     if (!el) return;
     el.style.display = 'none';
 }
+
+function clearValidationUI(root) {
+    if (!root) return;
+
+    const clearFieldErrorFn =
+        typeof window !== 'undefined' && typeof window.clearFieldError === 'function'
+            ? window.clearFieldError
+            : null;
+
+    root.querySelectorAll('.input-error').forEach((el) => {
+        if (clearFieldErrorFn) {
+            clearFieldErrorFn(el);
+        } else {
+            el.classList.remove('input-error');
+        }
+    });
+
+    root.querySelectorAll('.input-error-text').forEach((el) => el.remove());
+}

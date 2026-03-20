@@ -1281,7 +1281,9 @@ const office_owners = function () {
         }
 
         const nameText = item.querySelector('.founder-name-text') || item.querySelector('.nested-founder-name');
-        const percentText = item.querySelector('.owner-percent-text');
+        // Для корневых карточек процентовка — `owner-percent-text`,
+        // для вложенных строк — `nested-founder-percent`
+        const percentText = item.querySelector('.owner-percent-text') || item.querySelector('.nested-founder-percent');
         const iconEl = item.querySelector('.nested-founder-preview .nested-founder-icon')
             || item.querySelector('.office-owner-preview .founder-icon');
 
@@ -1413,10 +1415,10 @@ const office_owners = function () {
 
         return `
             <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}" data-state="saved" data-is-new="0">
-                <button type="button" class="button_remove button_remove--small" title="Удалить" data-office-owner-item-remove>×</button>
                 <div class="nested-founder-preview">
                     <div>
                         <div class="nested-founder-preview-main">
+                            <span class="nested-founder-percent"></span>
                             <span class="nested-founder-icon ${isJur ? 'nested-founder-icon--jur' : 'nested-founder-icon--fiz'}" title="${isJur ? 'Юр. лицо' : 'Физ. лицо'}">
                                 ${isJur ? JUR_ICON : '👤'}
                             </span>
@@ -1425,6 +1427,7 @@ const office_owners = function () {
                     </div>
                     <div class="nested-founder-preview-actions">
                         <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать" data-office-owner-edit>✏️</button>
+                        <button type="button" class="button_remove_founder" title="Удалить" aria-label="Удалить" data-office-owner-item-remove>✕</button>
                     </div>
                 </div>
                 <div class="nested-founder-fields">

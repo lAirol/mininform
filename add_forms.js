@@ -809,7 +809,7 @@ const jur_person_founder = function () {
                         <div><label>Код</label><input type="tel" data-path="${p}.phoneCode" data-validate="phoneCode" required></div>
                         <div><label>Телефон</label><input type="tel" data-path="${p}.phone" data-validate="phone" required></div>
                         <div><label>Факс</label><input type="text" data-path="${p}.fax"></div>
-                        <div><label>Email</label><input type="email" data-path="${p}.email" required></div>
+                        <div><label>Email</label><input type="email" data-path="${p}.email" data-validate="email" required></div>
                     </div>
 
                     <div class="nested-founders-block jur-founders-inner" data-parent-path="${p}">
@@ -1796,7 +1796,7 @@ const domain_owner_container = function () {
           </div>
           <div>
             <label>Адрес электронной почты</label>
-            <input type="email" data-path="domainOwner.email" required>
+            <input type="email" data-path="domainOwner.email" data-validate="email" required>
           </div>
         </div>
 

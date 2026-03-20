@@ -523,10 +523,12 @@ const jur_person_founder = function () {
                     <div class="nested-founders-block" data-parent-path="${path}">
                         <p class="nested-founders-title">УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</p>
                         <div class="nested-founders-list" data-owner-path="${path}"></div>
-                        <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${path}">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</div>
-                        <div class="nested-founders-actions">
-                            <button type="button" class="button_add_nested" data-add-nested-jur>+ Юр. лицо</button>
-                            <button type="button" class="button_add_nested" data-add-nested-fiz>+ Физ. лицо</button>
+                        <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${path}">
+                            <span class="founders-sum-text">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</span>
+                            <div class="nested-founders-actions">
+                                <button type="button" class="button_add_nested" data-add-nested-jur>+ Юр. лицо</button>
+                                <button type="button" class="button_add_nested" data-add-nested-fiz>+ Физ. лицо</button>
+                            </div>
                         </div>
                     </div>` : ''}
                 </div>
@@ -586,10 +588,12 @@ const jur_person_founder = function () {
                     <div class="nested-founders-block jur-founders-inner" data-parent-path="${p}">
                         <p class="nested-founders-title">УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</p>
                         <div class="nested-founders-list" data-owner-path="${p}"></div>
-                        <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${p}">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</div>
-                        <div class="nested-founders-actions">
-                            <button type="button" class="button_add_nested" data-add-nested-jur>+ Юр. лицо</button>
-                            <button type="button" class="button_add_nested" data-add-nested-fiz>+ Физ. лицо</button>
+                        <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${p}">
+                            <span class="founders-sum-text">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</span>
+                            <div class="nested-founders-actions">
+                                <button type="button" class="button_add_nested" data-add-nested-jur>+ Юр. лицо</button>
+                                <button type="button" class="button_add_nested" data-add-nested-fiz>+ Физ. лицо</button>
+                            </div>
                         </div>
                     </div>
 
@@ -668,9 +672,16 @@ const jur_person_founder = function () {
 
         total = Math.round(total * 100) / 100;
 
-        sumEl.setAttribute('data-sum', total);
-        sumEl.textContent = total === 100 ? '100% ---- ВСЕ УЧРЕДИТЕЛИ ВВЕДЕНЫ' :
+        const sumTextEl = sumEl.querySelector('.founders-sum-text');
+        const sumText = total === 100 ? '100% ---- ВСЕ УЧРЕДИТЕЛИ ВВЕДЕНЫ' :
             total > 100 ? `${total}% ---- ПРЕВЫШЕНИЕ 100%!` : `${total}% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ`;
+
+        sumEl.setAttribute('data-sum', total);
+        if (sumTextEl) {
+            sumTextEl.textContent = sumText;
+        } else {
+            sumEl.textContent = sumText;
+        }
 
         sumEl.classList.toggle('founders-sum--complete', total === 100);
         sumEl.classList.toggle('founders-sum--incomplete', total !== 100);
@@ -1018,10 +1029,12 @@ const office_owners = function () {
                     <div class="nested-founders-block" data-parent-path="${path}">
                         <p class="nested-founders-title">УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</p>
                         <div class="nested-founders-list" data-owner-path="${path}"></div>
-                        <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${path}">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</div>
-                        <div class="nested-founders-actions">
-                            <button type="button" class="button_add_nested" data-add-office-nested-jur>+ Юр. лицо</button>
-                            <button type="button" class="button_add_nested" data-add-office-nested-fiz>+ Физ. лицо</button>
+                        <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${path}">
+                            <span class="founders-sum-text">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</span>
+                            <div class="nested-founders-actions">
+                                <button type="button" class="button_add_nested" data-add-office-nested-jur>+ Юр. лицо</button>
+                                <button type="button" class="button_add_nested" data-add-office-nested-fiz>+ Физ. лицо</button>
+                            </div>
                         </div>
                     </div>` : ''}
                 </div>
@@ -1078,10 +1091,12 @@ const office_owners = function () {
                         <div class="nested-founders-block" data-parent-path="${path}">
                             <p class="nested-founders-title">УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</p>
                             <div class="nested-founders-list" data-owner-path="${path}"></div>
-                            <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${path}">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</div>
-                            <div class="nested-founders-actions">
-                                <button type="button" class="button_add_nested" data-add-office-nested-jur>+ Юр. лицо</button>
-                                <button type="button" class="button_add_nested" data-add-office-nested-fiz>+ Физ. лицо</button>
+                            <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${path}">
+                                <span class="founders-sum-text">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</span>
+                                <div class="nested-founders-actions">
+                                    <button type="button" class="button_add_nested" data-add-office-nested-jur>+ Юр. лицо</button>
+                                    <button type="button" class="button_add_nested" data-add-office-nested-fiz>+ Физ. лицо</button>
+                                </div>
                             </div>
                         </div>` : ''}
                         <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
@@ -1102,8 +1117,10 @@ const office_owners = function () {
                 <div class="nested-founders-block jur-founders-inner" data-parent-path="${BASE_PATH}">
                     <p class="nested-founders-title">УЧРЕДИТЕЛИ:</p>
                     <div class="nested-founders-list" data-owner-path="${BASE_PATH}"></div>
-                    <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${BASE_PATH}">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</div>
-                    <div class="nested-founders-actions" style="display:none;"></div>
+                    <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${BASE_PATH}">
+                        <span class="founders-sum-text">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</span>
+                        <div class="nested-founders-actions" style="display:none;"></div>
+                    </div>
                 </div>`);
             block = container.querySelector(`.nested-founders-block[data-parent-path="${BASE_PATH}"]`);
         }
@@ -1125,9 +1142,16 @@ const office_owners = function () {
         });
         total = Math.round(total * 100) / 100;
 
-        sumEl.setAttribute('data-sum', total);
-        sumEl.textContent = total === 100 ? '100% ---- ВСЕ УЧРЕДИТЕЛИ ВВЕДЕНЫ' : 
+        const sumTextEl = sumEl.querySelector('.founders-sum-text');
+        const sumText = total === 100 ? '100% ---- ВСЕ УЧРЕДИТЕЛИ ВВЕДЕНЫ' : 
                            total > 100 ? `${total}% ---- ПРЕВЫШЕНИЕ 100%!` : `${total}% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ`;
+
+        sumEl.setAttribute('data-sum', total);
+        if (sumTextEl) {
+            sumTextEl.textContent = sumText;
+        } else {
+            sumEl.textContent = sumText;
+        }
         
         sumEl.classList.toggle('founders-sum--complete', total === 100);
         sumEl.classList.toggle('founders-sum--incomplete', total !== 100);

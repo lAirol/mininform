@@ -461,6 +461,11 @@ const jur_person_founder = function () {
             }
         });
 
+        card.querySelectorAll('.nested-founder-item').forEach((node) => {
+            const v = readNestedFounderValues(node);
+            if (v) applyNestedFounderData(node, v);
+        });
+
         toggleState(card, 'saved');
 
         card.querySelectorAll('.nested-founders-block').forEach((block) => {
@@ -492,33 +497,255 @@ const jur_person_founder = function () {
     }
 
 
+    function ensureNestedFounderDialogStyle() {
+        if (document.getElementById('nested-founder-dialog-style')) return;
+        const style = document.createElement('style');
+        style.id = 'nested-founder-dialog-style';
+        style.textContent = `
+            .nested-founder-dialog-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(20, 22, 26, 0.45);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                padding: 20px;
+            }
+            .nested-founder-dialog {
+                width: min(920px, 100%);
+                max-height: calc(100vh - 40px);
+                overflow: auto;
+                background: #fff;
+                border-radius: 12px;
+                padding: 18px 18px 14px;
+                box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+            }
+            .nested-founder-dialog-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 10px;
+            }
+            .nested-founder-dialog-close {
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+                border: 1px solid #d0d7de;
+                background: #fff;
+                color: #4b5563;
+                font-size: 18px;
+                line-height: 1;
+                padding: 0;
+            }
+            .nested-founder-preview {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 8px;
+            }
+            .nested-founder-preview-main {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 600;
+            }
+            .nested-founder-preview-actions {
+                display: inline-flex;
+                gap: 8px;
+            }
+            .nested-founder-preview-actions button {
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                background: #fff;
+                color: #4b5563;
+                border: 1px solid #d1d5db;
+                padding: 0;
+                line-height: 1;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function upsertHiddenField(item, path, value) {
+        let input = item.querySelector(`input[type="hidden"][data-path="${path}"]`);
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.setAttribute('data-path', path);
+            item.appendChild(input);
+        }
+        input.value = value ?? '';
+    }
+
+    function readNestedFounderValues(item) {
+        const path = item.getAttribute('data-founder-path');
+        if (!path) return null;
+        const read = (key) => item.querySelector(`[data-path="${path}.${key}"]`)?.value ?? '';
+        return {
+            name: read('name'),
+            country: read('country'),
+            capitalPercent: read('capitalPercent'),
+            isState: read('isState') === 'true'
+        };
+    }
+
+    function applyNestedFounderData(item, values) {
+        const path = item.getAttribute('data-founder-path');
+        if (!path) return;
+
+        upsertHiddenField(item, `${path}.name`, values.name ?? '');
+        upsertHiddenField(item, `${path}.country`, values.country ?? '');
+        upsertHiddenField(item, `${path}.capitalPercent`, values.capitalPercent ?? '');
+        if (item.classList.contains('nested-founder-jur')) {
+            upsertHiddenField(item, `${path}.isState`, values.isState ? 'true' : 'false');
+        }
+
+        const nameEl = item.querySelector('.nested-founder-name');
+        const percentEl = item.querySelector('.nested-founder-percent');
+        const iconEl = item.querySelector('.nested-founder-icon');
+        if (nameEl) nameEl.textContent = values.name?.trim() || 'Без имени';
+        if (percentEl) {
+            percentEl.textContent = values.capitalPercent?.toString().trim() !== ''
+                ? `${values.capitalPercent}%` : '';
+        }
+
+        if (item.classList.contains('nested-founder-jur')) {
+            const isState = !!values.isState;
+            if (iconEl) iconEl.textContent = isState ? STATE_ORG_ICON : JUR_ICON;
+            const innerBlock = item.querySelector(':scope > .nested-founder-fields > .nested-founders-block');
+            if (innerBlock) {
+                if (isState) {
+                    innerBlock.style.display = 'none';
+                    innerBlock.setAttribute('data-ignore-container', '1');
+                } else {
+                    innerBlock.style.display = '';
+                    innerBlock.removeAttribute('data-ignore-container');
+                }
+            }
+        }
+    }
+
+    function openNestedFounderDialog({ type, parentPath, item }) {
+        ensureNestedFounderDialogStyle();
+        const isJur = type === 'jur';
+        const values = item ? readNestedFounderValues(item) : { name: '', country: '', capitalPercent: '', isState: false };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'nested-founder-dialog-overlay';
+        overlay.innerHTML = `
+            <div class="nested-founder-dialog" role="dialog" aria-modal="true">
+                <div class="nested-founder-dialog-header">
+                    <h4 style="margin:0;">${item ? 'Редактирование' : 'Добавление'} учредителя СМИ - ${isJur ? 'юридического лица' : 'физического лица'}</h4>
+                    <button type="button" class="nested-founder-dialog-close" aria-label="Закрыть">×</button>
+                </div>
+                ${isJur ? `
+                <p class="subtitle">Является ли государственным органом (организацией)</p>
+                <div class="inline-options" style="margin-top:0;">
+                    <label><input type="radio" name="nested_jur_state_dialog" value="true" ${values.isState ? 'checked' : ''}> да</label>
+                    <label><input type="radio" name="nested_jur_state_dialog" value="false" ${values.isState ? '' : 'checked'}> нет</label>
+                </div>` : ''}
+                <div class="full-width">
+                    <label>${isJur ? 'Полное наименование юридического лица' : 'Фамилия, имя, отчество'}</label>
+                    <input type="text" class="nested-dialog-name" value="${values.name || ''}" required>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>${isJur ? 'Резидент какой страны' : 'Гражданство'}</label>
+                        <select class="nested-dialog-country" required>${COUNTRY_OPTIONS}</select>
+                    </div>
+                    <div class="field field--short">
+                        <label>Доля в уставном фонде, %</label>
+                        <input type="number" step="0.01" class="nested-dialog-percent" value="${values.capitalPercent || ''}" required>
+                    </div>
+                </div>
+                <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button type="button" class="btn-save-founder nested-dialog-save">Сохранить</button>
+                    <button type="button" class="btn-cancel-founder nested-dialog-cancel">Отменить</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        const countryEl = overlay.querySelector('.nested-dialog-country');
+        if (countryEl) countryEl.value = values.country || '';
+
+        const close = () => overlay.remove();
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+        overlay.querySelector('.nested-founder-dialog-close')?.addEventListener('click', close);
+        overlay.querySelector('.nested-dialog-cancel')?.addEventListener('click', close);
+
+        overlay.querySelector('.nested-dialog-save')?.addEventListener('click', () => {
+            const nameInput = overlay.querySelector('.nested-dialog-name');
+            const countryInput = overlay.querySelector('.nested-dialog-country');
+            const percentInput = overlay.querySelector('.nested-dialog-percent');
+            const next = {
+                name: nameInput?.value?.trim() || '',
+                country: countryInput?.value || '',
+                capitalPercent: percentInput?.value || '',
+                isState: !!overlay.querySelector('input[name="nested_jur_state_dialog"][value="true"]')?.checked
+            };
+
+            let hasError = false;
+            [nameInput, countryInput, percentInput].forEach((field) => {
+                if (!field) return;
+                const invalid = !field.value || !String(field.value).trim();
+                field.classList.toggle('input-error', invalid);
+                if (invalid) hasError = true;
+            });
+            if (hasError) return;
+
+            if (item) {
+                applyNestedFounderData(item, next);
+                const parentBlock = item.closest('.nested-founders-block');
+                if (parentBlock) updateSum(parentBlock);
+            } else {
+                const ownerCard = document.querySelector(`.card-jur-founder [data-parent-path="${parentPath}"]`)?.closest('.card-jur-founder')
+                    || document.querySelector(`.card-jur-founder[data-parent-path="${parentPath.split('.founders.')[0]}"]`);
+                const block = ownerCard?.querySelector(`.nested-founders-block[data-parent-path="${parentPath}"]`) || document.querySelector(`.nested-founders-block[data-parent-path="${parentPath}"]`);
+                const list = block ? getBlockElements(block).list : null;
+                if (!block || !list) return;
+                const index = list.querySelectorAll(':scope > .nested-founder-item').length;
+                list.insertAdjacentHTML('beforeend', buildNestedItem(parentPath, index, type));
+                const addedItem = list.querySelector(':scope > .nested-founder-item:last-child');
+                if (addedItem) applyNestedFounderData(addedItem, next);
+                updateSum(block);
+            }
+
+            close();
+        });
+    }
+
     function buildNestedItem(parentPath, index, type) {
         const path = `${parentPath}.founders.${index}`;
         const isJur = type === 'jur';
 
         return `
             <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}">
-                <button type="button" class="button_remove button_remove--small" title="Удалить" data-nested-founder-remove>×</button>
-                <span class="nested-founder-icon ${isJur ? 'nested-founder-icon--jur' : 'nested-founder-icon--fiz'}" title="${isJur ? 'Юр. лицо' : 'Физ. лицо'}">
-                    ${isJur ? '💼' : '👤'}
-                </span>
+                <div class="nested-founder-preview">
+                    <div class="nested-founder-preview-main">
+                        <span class="nested-founder-percent"></span>
+                        <span class="nested-founder-icon ${isJur ? 'nested-founder-icon--jur' : 'nested-founder-icon--fiz'}" title="${isJur ? 'Юр. лицо' : 'Физ. лицо'}">
+                            ${isJur ? JUR_ICON : '👤'}
+                        </span>
+                        <span class="nested-founder-name">Новый учредитель</span>
+                    </div>
+                    <div class="nested-founder-preview-actions">
+                        <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать" data-nested-founder-edit>✏️</button>
+                        <button type="button" class="button_remove_founder" title="Удалить" aria-label="Удалить" data-nested-founder-remove>✕</button>
+                    </div>
+                </div>
                 <div class="nested-founder-fields">
                     <input type="hidden" data-path="${path}.typeFace" value="${isJur ? 'jurFace' : 'fizFace'}">
-                    <div class="full-width">
-                        <label>${isJur ? 'Полное наименование юридического лица' : 'Фамилия, имя, отчество'}</label>
-                        <input type="text" data-path="${path}.name" placeholder="${isJur ? 'Наименование' : 'ФИО'}" required>
-                    </div>
-                    <div class="row">
-                        <div class="field">
-                            <label>${isJur ? 'Резидент какой страны' : 'Гражданство'}</label>
-                            <select data-path="${path}.country" required>${COUNTRY_OPTIONS}</select>
-                        </div>
-                        <div class="field field--short">
-                            <label>Доля в уставном фонде, %</label>
-                            <input type="number" step="0.01" data-path="${path}.capitalPercent" 
-                            class="founder-capital-percent" inputmode="numeric" data-validate="percent" required>
-                        </div>
-                    </div>
+                    <input type="hidden" data-path="${path}.name" value="">
+                    <input type="hidden" data-path="${path}.country" value="">
+                    <input type="hidden" data-path="${path}.capitalPercent" class="founder-capital-percent" value="">
+                    ${isJur ? `<input type="hidden" data-path="${path}.isState" value="false">` : ''}
                     ${isJur ? `
                     <div class="nested-founders-block" data-parent-path="${path}">
                         <p class="nested-founders-title">УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</p>
@@ -666,7 +893,7 @@ const jur_person_founder = function () {
         const { list, sumEl } = getBlockElements(block);
         if (!list || !sumEl) return;
 
-        const inputs = list.querySelectorAll(':scope > .nested-founder-item > .nested-founder-fields > .row > .field > .founder-capital-percent');
+        const inputs = list.querySelectorAll(':scope > .nested-founder-item > .nested-founder-fields > .founder-capital-percent');
         let total = 0;
         inputs.forEach(input => total += parseFloat(input.value) || 0);
 
@@ -807,12 +1034,12 @@ const jur_person_founder = function () {
                     return;
                 }
 
-                if (target.closest('.button_edit_founder')) {
+                if (target.closest('.button_edit_founder') && !target.closest('.nested-founder-item')) {
                     toggleState(card, 'editing');
                     return;
                 }
 
-                if (target.closest('.button_remove_founder')) {
+                if (target.closest('.button_remove_founder') && !target.closest('.nested-founder-item')) {
                     card.remove();
                     reindexAll();
                     checkContainersAndFiller();
@@ -823,19 +1050,26 @@ const jur_person_founder = function () {
             if (target.closest('[data-nested-founder-remove]')) {
                 const item = target.closest('.nested-founder-item');
                 removeNestedFounder(item);
+                return;
+            }
+
+            if (target.closest('[data-nested-founder-edit]')) {
+                const item = target.closest('.nested-founder-item');
+                if (!item) return;
+                const isJur = item.classList.contains('nested-founder-jur');
+                const parentPath = item.getAttribute('data-founder-path')?.replace(/\.founders\.\d+$/, '');
+                if (!parentPath) return;
+                openNestedFounderDialog({ type: isJur ? 'jur' : 'fiz', parentPath, item });
+                return;
             }
 
             if (target.closest('.button_add_nested') && !target.closest('#office-owners-container')) {
                 const btn = target.closest('.button_add_nested');
                 const block = btn.closest('.nested-founders-block');
                 if (!block || !container.contains(block)) return;
-                const list = getBlockElements(block).list;
                 const type = btn.hasAttribute('data-add-nested-jur') ? 'jur' : 'fiz';
                 const parentPath = block.getAttribute('data-parent-path');
-                const index = list.querySelectorAll(':scope > .nested-founder-item').length;
-
-                list.insertAdjacentHTML('beforeend', buildNestedItem(parentPath, index, type));
-                updateSum(block);
+                openNestedFounderDialog({ type, parentPath, item: null });
             }
         });
 
@@ -957,6 +1191,11 @@ const office_owners = function () {
             }
         });
 
+        card.querySelectorAll('.nested-founder-item').forEach((node) => {
+            const v = readOfficeOwnerValues(node);
+            if (v) applyOfficeOwnerData(node, v);
+        });
+
         card.querySelectorAll('.nested-founder-item.nested-founder-jur').forEach((jurItem) => {
             updateOwnerStateOrgUI(jurItem);
         });
@@ -990,41 +1229,210 @@ const office_owners = function () {
         };
     }
 
+    function ensureOfficeOwnerDialogStyle() {
+        if (document.getElementById('nested-founder-dialog-style')) return;
+        const style = document.createElement('style');
+        style.id = 'nested-founder-dialog-style';
+        style.textContent = `
+            .nested-founder-dialog-overlay { position: fixed; inset: 0; background: rgba(20, 22, 26, 0.45);
+                display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+            .nested-founder-dialog { width: min(920px, 100%); max-height: calc(100vh - 40px); overflow: auto;
+                background: #fff; border-radius: 12px; padding: 18px 18px 14px; box-shadow: 0 18px 45px rgba(0,0,0,0.18); }
+            .nested-founder-dialog-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+            .nested-founder-dialog-close { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #d0d7de;
+                background: #fff; color: #4b5563; font-size: 18px; line-height: 1; padding: 0; }
+        `;
+        document.head.appendChild(style);
+    }
 
-    // Вложенные собственники (внутри юр. лица) — без карточки, как в jur_person_founder
+    function upsertHiddenOfficeField(item, path, value) {
+        const fieldsRoot = item.querySelector(':scope > .nested-founder-fields') || item;
+        let input = fieldsRoot.querySelector(`input[type="hidden"][data-path="${path}"]`);
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.setAttribute('data-path', path);
+            fieldsRoot.appendChild(input);
+        }
+        input.value = value ?? '';
+    }
+
+    function readOfficeOwnerValues(item) {
+        const path = item.getAttribute('data-founder-path');
+        if (!path) return null;
+        const read = (key) => item.querySelector(`[data-path="${path}.${key}"]`)?.value ?? '';
+        return {
+            name: read('name'),
+            country: read('country'),
+            capitalPercent: read('capitalPercent'),
+            isState: read('isState') === 'true'
+        };
+    }
+
+    function applyOfficeOwnerData(item, values) {
+        const path = item.getAttribute('data-founder-path');
+        if (!path) return;
+
+        upsertHiddenOfficeField(item, `${path}.name`, values.name ?? '');
+        upsertHiddenOfficeField(item, `${path}.country`, values.country ?? '');
+        upsertHiddenOfficeField(item, `${path}.capitalPercent`, values.capitalPercent ?? '');
+        if (item.classList.contains('nested-founder-jur')) {
+            upsertHiddenOfficeField(item, `${path}.isState`, values.isState ? 'true' : 'false');
+        }
+
+        const nameText = item.querySelector('.founder-name-text') || item.querySelector('.nested-founder-name');
+        const percentText = item.querySelector('.owner-percent-text');
+        const iconEl = item.querySelector('.nested-founder-preview .nested-founder-icon')
+            || item.querySelector('.office-owner-preview .founder-icon');
+
+        if (nameText) nameText.textContent = values.name?.trim() || 'Без имени';
+        if (percentText) {
+            percentText.textContent = values.capitalPercent?.toString().trim() !== ''
+                ? `${values.capitalPercent}%` : '';
+        }
+
+        if (item.classList.contains('nested-founder-jur')) {
+            const isState = !!values.isState;
+            if (iconEl) iconEl.textContent = isState ? STATE_ORG_ICON : JUR_ICON;
+            const innerBlock = item.querySelector(':scope > .nested-founder-fields > .nested-founders-block');
+            if (innerBlock) {
+                if (isState) {
+                    innerBlock.style.display = 'none';
+                    innerBlock.setAttribute('data-ignore-container', '1');
+                } else {
+                    innerBlock.style.display = '';
+                    innerBlock.removeAttribute('data-ignore-container');
+                }
+            }
+        }
+    }
+
+    function openOfficeOwnerDialog({ type, parentPath, item }) {
+        ensureOfficeOwnerDialogStyle();
+        const isJur = type === 'jur';
+        const values = item ? readOfficeOwnerValues(item) : { name: '', country: '', capitalPercent: '', isState: false };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'nested-founder-dialog-overlay';
+        overlay.innerHTML = `
+            <div class="nested-founder-dialog" role="dialog" aria-modal="true">
+                <div class="nested-founder-dialog-header">
+                    <h4 style="margin:0;">${item ? 'Редактирование' : 'Добавление'} собственника имущества — ${isJur ? 'юридического лица' : 'физического лица'}</h4>
+                    <button type="button" class="nested-founder-dialog-close" aria-label="Закрыть">×</button>
+                </div>
+                ${isJur ? `
+                <p class="subtitle">Является ли государственным органом (организацией)</p>
+                <div class="inline-options" style="margin-top:0;">
+                    <label><input type="radio" name="office_owner_jur_state_dialog" value="true" ${values.isState ? 'checked' : ''}> да</label>
+                    <label><input type="radio" name="office_owner_jur_state_dialog" value="false" ${values.isState ? '' : 'checked'}> нет</label>
+                </div>` : ''}
+                <div class="full-width">
+                    <label>${isJur ? 'Полное наименование юридического лица' : 'Фамилия, имя, отчество'}</label>
+                    <input type="text" class="office-owner-dialog-name" required>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>${isJur ? 'Резидент какой страны' : 'Гражданство'}</label>
+                        <select class="office-owner-dialog-country" required>${COUNTRY_OPTIONS}</select>
+                    </div>
+                    <div class="field field--short">
+                        <label>Доля, %</label>
+                        <input type="number" step="0.01" class="office-owner-dialog-percent" value="${values.capitalPercent || ''}" required>
+                    </div>
+                </div>
+                <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button type="button" class="btn-save-founder office-owner-dialog-save">Сохранить</button>
+                    <button type="button" class="btn-cancel-founder office-owner-dialog-cancel">Отменить</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        const nameField = overlay.querySelector('.office-owner-dialog-name');
+        if (nameField) nameField.value = values.name || '';
+        const countryEl = overlay.querySelector('.office-owner-dialog-country');
+        if (countryEl) countryEl.value = values.country || '';
+
+        const close = () => overlay.remove();
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+        overlay.querySelector('.nested-founder-dialog-close')?.addEventListener('click', close);
+        overlay.querySelector('.office-owner-dialog-cancel')?.addEventListener('click', close);
+
+        overlay.querySelector('.office-owner-dialog-save')?.addEventListener('click', () => {
+            const nameInput = overlay.querySelector('.office-owner-dialog-name');
+            const countryInput = overlay.querySelector('.office-owner-dialog-country');
+            const percentInput = overlay.querySelector('.office-owner-dialog-percent');
+            const next = {
+                name: nameInput?.value?.trim() || '',
+                country: countryInput?.value || '',
+                capitalPercent: percentInput?.value || '',
+                isState: !!overlay.querySelector('input[name="office_owner_jur_state_dialog"][value="true"]')?.checked
+            };
+
+            let hasError = false;
+            [nameInput, countryInput, percentInput].forEach((field) => {
+                if (!field) return;
+                const invalid = !field.value || !String(field.value).trim();
+                field.classList.toggle('input-error', invalid);
+                if (invalid) hasError = true;
+            });
+            if (hasError) return;
+
+            const officeContainer = getContainer();
+            if (!officeContainer) return;
+
+            if (item) {
+                applyOfficeOwnerData(item, next);
+                const parentBlock = item.closest('.nested-founders-block');
+                if (parentBlock) updateSum(parentBlock);
+            } else {
+                const block = officeContainer.querySelector(`.nested-founders-block[data-parent-path="${parentPath}"]`);
+                const { list } = getBlockElements(block);
+                if (!block || !list) return;
+                const index = list.querySelectorAll(':scope > .nested-founder-item').length;
+                const html = parentPath === BASE_PATH
+                    ? buildRootOwnerItem(index, type)
+                    : buildNestedItem(parentPath, index, type);
+                list.insertAdjacentHTML('beforeend', html);
+                const addedItem = list.querySelector(':scope > .nested-founder-item:last-child');
+                if (addedItem) applyOfficeOwnerData(addedItem, next);
+                updateSum(block);
+                if (parentPath === BASE_PATH) updateRootVisibility();
+            }
+
+            close();
+        });
+    }
+
+    // Вложенные собственники — компактная строка + скрытые поля; ввод через модальное окно
     function buildNestedItem(parentPath, index, type) {
         const path = `${parentPath}.${SEGMENT}.${index}`;
         const isJur = type === 'jur';
-        const radioName = 'officeState_' + path.replace(/\./g, '_');
 
         return `
-            <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}">
-                <span class="nested-founder-icon ${isJur ? 'nested-founder-icon--jur' : 'nested-founder-icon--fiz'}" title="${isJur ? 'Юр. лицо' : 'Физ. лицо'}">
-                    ${isJur ? JUR_ICON : '👤'}
-                </span>
+            <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}" data-state="saved" data-is-new="0">
+                <button type="button" class="button_remove button_remove--small" title="Удалить" data-office-owner-item-remove>×</button>
+                <div class="nested-founder-preview">
+                    <div>
+                        <div class="nested-founder-preview-main">
+                            <span class="nested-founder-icon ${isJur ? 'nested-founder-icon--jur' : 'nested-founder-icon--fiz'}" title="${isJur ? 'Юр. лицо' : 'Физ. лицо'}">
+                                ${isJur ? JUR_ICON : '👤'}
+                            </span>
+                            <span class="nested-founder-name">Новый собственник</span>
+                        </div>
+                    </div>
+                    <div class="nested-founder-preview-actions">
+                        <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать" data-office-owner-edit>✏️</button>
+                    </div>
+                </div>
                 <div class="nested-founder-fields">
                     <input type="hidden" data-path="${path}.typeFace" value="${isJur ? 'jurFace' : 'fizFace'}">
-                    ${isJur ? `
-                    <p class="subtitle">Является ли государственным органом?</p>
-                    <div class="inline-options">
-                        <label><input type="radio" name="${radioName}" value="true" data-path="${path}.isState"> Да</label>
-                        <label><input type="radio" name="${radioName}" value="false" data-path="${path}.isState" checked="checked"> Нет</label>
-                    </div>` : ''}
-                    <div class="full-width">
-                        <label>${isJur ? 'Полное наименование юридического лица' : 'Фамилия, имя, отчество'}</label>
-                        <input type="text" data-path="${path}.name" placeholder="${isJur ? 'Наименование' : 'ФИО'}" required>
-                    </div>
-                    <div class="row">
-                        <div class="field">
-                            <label>${isJur ? 'Резидент какой страны' : 'Гражданство'}</label>
-                            <select data-path="${path}.country" required>${COUNTRY_OPTIONS}</select>
-                        </div>
-                        <div class="field field--short">
-                            <label>Доля, %</label>
-                            <input type="number" step="0.01" inputmode="decimal" data-path="${path}.capitalPercent" class="founder-capital-percent" 
-                            inputmode="numeric" data-validate="percent" required>
-                        </div>
-                    </div>
+                    <input type="hidden" data-path="${path}.name" value="">
+                    <input type="hidden" data-path="${path}.country" value="">
+                    <input type="hidden" data-path="${path}.capitalPercent" class="founder-capital-percent" value="">
+                    ${isJur ? `<input type="hidden" data-path="${path}.isState" value="false">` : ''}
                     ${isJur ? `
                     <div class="nested-founders-block" data-parent-path="${path}">
                         <p class="nested-founders-title">УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</p>
@@ -1041,69 +1449,42 @@ const office_owners = function () {
             </div>`;
     }
 
-    // Корневой уровень (office.owners) — карточка с превью и кнопками Добавить/Отмена/Редактировать, как physical/jur founder
+    // Корневой уровень (office.owners) — превью + скрытые поля; ввод через модальное окно
     function buildRootOwnerItem(index, type) {
         const path = `${BASE_PATH}.${SEGMENT}.${index}`;
         const isJur = type === 'jur';
-        const radioName = 'officeState_' + path.replace(/\./g, '_');
 
         return `
-            <div class="nested-founder-item ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}" data-state="editing" data-is-new="1">
-                <div class="office-owner-preview founder-preview" style="display: none;">
+            <div class="nested-founder-item office-owner-root ${isJur ? 'nested-founder-jur' : 'nested-founder-fiz'}" data-founder-path="${path}" data-state="saved" data-is-new="0">
+                <div class="office-owner-preview founder-preview">
                     <div class="founder-preview-info">
                         <span class="owner-percent-text"></span>
                         <span class="founder-icon">${isJur ? JUR_ICON : '👤'}</span>
                         <span class="founder-name-text">Новый собственник</span>
                     </div>
                     <div class="founder-preview-actions">
-                        <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать">✏️</button>
+                        <button type="button" class="button_edit_founder" title="Редактировать" aria-label="Редактировать" data-office-owner-edit>✏️</button>
                         <button type="button" class="button_remove_founder" title="Удалить" aria-label="Удалить">✕</button>
                     </div>
                 </div>
-                <div class="nested-founder-fields office-owner-form">
-                    <span class="nested-founder-icon ${isJur ? 'nested-founder-icon--jur' : 'nested-founder-icon--fiz'}" title="${isJur ? 'Юр. лицо' : 'Физ. лицо'}">
-                        ${isJur ? JUR_ICON : '👤'}
-                    </span>
-                    <div class="nested-founder-fields-inner">
-                        <input type="hidden" data-path="${path}.typeFace" value="${isJur ? 'jurFace' : 'fizFace'}">
-                        ${isJur ? `
-                        <p class="subtitle">Является ли государственным органом?</p>
-                        <div class="inline-options">
-                            <label><input type="radio" name="${radioName}" value="true" data-path="${path}.isState"> Да</label>
-                            <label><input type="radio" name="${radioName}" value="false" data-path="${path}.isState" checked="checked"> Нет</label>
-                        </div>` : ''}
-                        <div class="full-width">
-                            <label>${isJur ? 'Полное наименование юридического лица' : 'Фамилия, имя, отчество'}</label>
-                            <input type="text" data-path="${path}.name" placeholder="${isJur ? 'Наименование' : 'ФИО'}" required>
-                        </div>
-                        <div class="row">
-                            <div class="field">
-                                <label>${isJur ? 'Резидент какой страны' : 'Гражданство'}</label>
-                                <select data-path="${path}.country" required>${COUNTRY_OPTIONS}</select>
-                            </div>
-                            <div class="field field--short">
-                                <label>Доля, %</label>
-                                <input type="number" step="0.01" inputmode="decimal" data-path="${path}.capitalPercent" class="founder-capital-percent" 
-                                inputmode="numeric" data-validate="percent" required>
+                <div class="nested-founder-fields">
+                    <input type="hidden" data-path="${path}.typeFace" value="${isJur ? 'jurFace' : 'fizFace'}">
+                    <input type="hidden" data-path="${path}.name" value="">
+                    <input type="hidden" data-path="${path}.country" value="">
+                    <input type="hidden" data-path="${path}.capitalPercent" class="founder-capital-percent" value="">
+                    ${isJur ? `<input type="hidden" data-path="${path}.isState" value="false">` : ''}
+                    ${isJur ? `
+                    <div class="nested-founders-block" data-parent-path="${path}">
+                        <p class="nested-founders-title">УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</p>
+                        <div class="nested-founders-list" data-owner-path="${path}"></div>
+                        <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${path}">
+                            <span class="founders-sum-text">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</span>
+                            <div class="nested-founders-actions">
+                                <button type="button" class="button_add_nested" data-add-office-nested-jur>+ Юр. лицо</button>
+                                <button type="button" class="button_add_nested" data-add-office-nested-fiz>+ Физ. лицо</button>
                             </div>
                         </div>
-                        ${isJur ? `
-                        <div class="nested-founders-block" data-parent-path="${path}">
-                            <p class="nested-founders-title">УЧРЕДИТЕЛИ УКАЗАННОГО ЮРИДИЧЕСКОГО ЛИЦА:</p>
-                            <div class="nested-founders-list" data-owner-path="${path}"></div>
-                            <div class="founders-sum founders-sum--incomplete" data-sum="0" data-owner-path="${path}">
-                                <span class="founders-sum-text">0% ---- ДОБАВЬТЕ УЧРЕДИТЕЛЯ</span>
-                                <div class="nested-founders-actions">
-                                    <button type="button" class="button_add_nested" data-add-office-nested-jur>+ Юр. лицо</button>
-                                    <button type="button" class="button_add_nested" data-add-office-nested-fiz>+ Физ. лицо</button>
-                                </div>
-                            </div>
-                        </div>` : ''}
-                        <div class="form-footer-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-                            <button type="button" class="btn-save-founder">Сохранить</button>
-                            <button type="button" class="btn-cancel-founder">Отменить</button>
-                        </div>
-                    </div>
+                    </div>` : ''}
                 </div>
             </div>`;
     }
@@ -1136,8 +1517,8 @@ const office_owners = function () {
         const items = list.querySelectorAll(':scope > .nested-founder-item');
         let total = 0;
         items.forEach(item => {
-            const inp = item.querySelector('.nested-founder-fields-inner > .row > .field > .founder-capital-percent')
-                || item.querySelector('.nested-founder-fields > .row > .field > .founder-capital-percent');
+            const inp = item.querySelector(':scope > .nested-founder-fields > .founder-capital-percent')
+                || item.querySelector('.founder-capital-percent');
             if (inp) total += parseFloat(inp.value) || 0;
         });
         total = Math.round(total * 100) / 100;
@@ -1195,8 +1576,8 @@ const office_owners = function () {
     }
 
     function updateOwnerStateOrgUI(item) {
-        const stateRadioYes = item.querySelector('input[type="radio"][data-path$=".isState"][value="true"]');
-        const isStateOrg = !!stateRadioYes?.checked;
+        const stateHidden = item.querySelector('input[type="hidden"][data-path$=".isState"]');
+        const isStateOrg = stateHidden?.value === 'true';
 
         const innerBlock = item.querySelector(':scope > .nested-founder-fields > .nested-founder-fields-inner > .nested-founders-block')
             || item.querySelector(':scope > .nested-founder-fields > .nested-founders-block');
@@ -1210,7 +1591,7 @@ const office_owners = function () {
             }
         }
 
-        const iconEl = item.querySelector('.nested-founder-icon');
+        const iconEl = item.querySelector('.nested-founder-preview .nested-founder-icon');
         if (iconEl && item.classList.contains('nested-founder-jur')) {
             iconEl.textContent = isStateOrg ? STATE_ORG_ICON : JUR_ICON;
         }
@@ -1220,30 +1601,13 @@ const office_owners = function () {
         }
     }
 
-    function validateOfficeOwnerItem(item) {
-        const fields = item.querySelectorAll('.nested-founder-fields-inner [data-path]');
-        let isValid = true;
-        fields.forEach(field => {
-            if (typeof window.validateField === 'function') {
-                if (!window.validateField(field)) isValid = false;
-            } else {
-                if (field.hasAttribute('required') && !field.value.trim()) {
-                    field.classList.add('input-error');
-                    isValid = false;
-                }
-            }
-        });
-        return isValid;
-    }
-
     function toggleStateOfficeOwner(item, state) {
-        const preview = item.querySelector('.office-owner-preview');
-        const form = item.querySelector('.nested-founder-fields.office-owner-form');
+        const preview = item.querySelector('.office-owner-preview.founder-preview');
+        const legacyForm = item.querySelector('.nested-founder-fields.office-owner-form');
         const nameInput = item.querySelector('[data-path$=".name"]');
         const percentInput = item.querySelector('[data-path$=".capitalPercent"]');
         const nameDisplay = item.querySelector('.office-owner-preview .founder-name-text');
         const percentDisplay = item.querySelector('.office-owner-preview .owner-percent-text');
-        if (!preview || !form) return;
         if (state === 'saved') {
             const name = nameInput?.value?.trim() || 'Без имени';
             const percentRaw = percentInput?.value;
@@ -1251,12 +1615,12 @@ const office_owners = function () {
             if (nameDisplay) nameDisplay.textContent = name;
             if (percentDisplay) percentDisplay.textContent = percent;
             updateOwnerStateOrgUI(item);
-            preview.style.display = 'flex';
-            form.style.display = 'none';
+            if (preview) preview.style.display = 'flex';
+            if (legacyForm) legacyForm.style.display = 'none';
             item.setAttribute('data-state', 'saved');
         } else {
-            preview.style.display = 'none';
-            form.style.display = '';
+            if (preview) preview.style.display = 'none';
+            if (legacyForm) legacyForm.style.display = '';
             item.setAttribute('data-state', 'editing');
             updateOwnerStateOrgUI(item);
         }
@@ -1310,57 +1674,60 @@ const office_owners = function () {
             const addRootBtn = target.closest('[data-add-office-owner]');
             if (addRootBtn) {
                 const type = addRootBtn.getAttribute('data-add-office-owner');
-                const root = getRootBlock();
-                const { list } = getBlockElements(root);
-                const index = list.querySelectorAll(':scope > .nested-founder-item').length;
-                list.insertAdjacentHTML('beforeend', buildRootOwnerItem(index, type));
-                const newItem = list.querySelector(`:scope > .nested-founder-item:last-child`);
-                if (newItem) updateOwnerStateOrgUI(newItem);
-                updateSum(root);
-                updateRootVisibility();
+                getRootBlock();
+                openOfficeOwnerDialog({ type, parentPath: BASE_PATH, item: null });
             }
 
-            const officeItem = target.closest('.nested-founder-item');
-            if (officeItem && container.contains(officeItem)) {
+            if (target.closest('[data-office-owner-edit]')) {
+                const officeItem = target.closest('.nested-founder-item');
+                if (!officeItem || !container.contains(officeItem)) return;
+                const isJur = officeItem.classList.contains('nested-founder-jur');
+                openOfficeOwnerDialog({ type: isJur ? 'jur' : 'fiz', parentPath: null, item: officeItem });
+            }
+
+            if (target.closest('[data-office-owner-item-remove]')) {
+                const officeItem = target.closest('.nested-founder-item');
+                if (officeItem && container.contains(officeItem)) {
+                    removeOwner(officeItem);
+                }
+                return;
+            }
+
+            const officeItemLegacy = target.closest('.nested-founder-item');
+            if (officeItemLegacy && container.contains(officeItemLegacy)) {
                 if (target.classList.contains('btn-save-founder')) {
-                    if (validateOfficeOwnerItem(officeItem)) {
-                        toggleStateOfficeOwner(officeItem, 'saved');
-                        officeItem.dataset.isNew = '0';
-                        snapshotSaved(officeItem);
-                        const block = officeItem.closest('.nested-founders-block');
-                        if (block) updateSum(block);
-                    } else {
-                        officeItem.querySelector('.input-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (typeof window.validateField === 'function') {
+                        let ok = true;
+                        officeItemLegacy.querySelectorAll('.nested-founder-fields-inner [data-path]').forEach((field) => {
+                            if (!window.validateField(field)) ok = false;
+                        });
+                        if (ok) {
+                            toggleStateOfficeOwner(officeItemLegacy, 'saved');
+                            officeItemLegacy.dataset.isNew = '0';
+                            snapshotSaved(officeItemLegacy);
+                            const block = officeItemLegacy.closest('.nested-founders-block');
+                            if (block) updateSum(block);
+                        }
                     }
                 }
                 if (target.classList.contains('btn-cancel-founder')) {
-                    if (officeItem.dataset.isNew === '1') {
-                        removeOwner(officeItem);
+                    if (officeItemLegacy.dataset.isNew === '1') {
+                        removeOwner(officeItemLegacy);
                     } else {
-                        restoreSaved(officeItem);
+                        restoreSaved(officeItemLegacy);
                     }
-                    return;
-                }
-                if (target.closest('.button_edit_founder')) {
-                    toggleStateOfficeOwner(officeItem, 'editing');
                 }
                 if (target.closest('.button_remove_founder')) {
-                    removeOwner(officeItem);
+                    removeOwner(officeItemLegacy);
                 }
             }
 
             const addNestedBtn = target.closest('.button_add_nested');
             if (addNestedBtn && addNestedBtn.closest('#' + CONTAINER_ID)) {
                 const block = addNestedBtn.closest('.nested-founders-block');
-                const { list } = getBlockElements(block);
                 const type = addNestedBtn.hasAttribute('data-add-office-nested-jur') ? 'jur' : 'fiz';
                 const parentPath = block.getAttribute('data-parent-path');
-                const index = list.querySelectorAll(':scope > .nested-founder-item').length;
-
-                list.insertAdjacentHTML('beforeend', buildNestedItem(parentPath, index, type));
-                const newItem = list.querySelector(`:scope > .nested-founder-item:last-child`);
-                if (newItem) updateOwnerStateOrgUI(newItem);
-                updateSum(block);
+                openOfficeOwnerDialog({ type, parentPath, item: null });
             }
         });
 
@@ -1369,13 +1736,6 @@ const office_owners = function () {
                 const block = e.target.closest('.nested-founders-block');
                 if (block && container.contains(block)) {
                     updateSum(block);
-                }
-            }
-
-            if (e.target.matches && e.target.matches('#' + CONTAINER_ID + ' input[type="radio"][data-path$=".isState"]')) {
-                const item = e.target.closest('.nested-founder-item');
-                if (item && container.contains(item)) {
-                    updateOwnerStateOrgUI(item);
                 }
             }
         });

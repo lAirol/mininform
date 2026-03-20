@@ -579,6 +579,106 @@
       border-color: #d1d5db;
       background: #f9fafb;
     }
+
+    /* 3.2 Собственники: превью строк как у учредителей (перебивает глобальные стили модалки) */
+    #office-owners-container .nested-founder-preview {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    #office-owners-container .nested-founder-preview-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+    #office-owners-container .nested-founder-preview-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #office-owners-container .nested-founder-preview-actions .button_edit_founder,
+    #office-owners-container .nested-founder-preview-actions .button_remove_founder {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1;
+    }
+    #office-owners-container .nested-founder-preview-actions .button_edit_founder:hover,
+    #office-owners-container .nested-founder-preview-actions .button_remove_founder:hover {
+      color: #111827;
+      border-color: #d1d5db;
+      background: #f9fafb;
+    }
+    #office-owners-container .office-owner-root .office-owner-preview.founder-preview {
+      margin-bottom: 10px;
+    }
+
+    /* 2.2 Вложенные учредители: доля слева от иконки, без строки со страной */
+    #jur-person-founders-container .nested-founder-preview {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+    }
+    #jur-person-founders-container .nested-founder-preview-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+    #jur-person-founders-container .nested-founder-preview-main .nested-founder-percent {
+      font-weight: 600;
+      min-width: 2.75em;
+      color: #374151;
+    }
+    #jur-person-founders-container .nested-founder-preview-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #jur-person-founders-container .nested-founder-preview-actions .button_edit_founder,
+    #jur-person-founders-container .nested-founder-preview-actions .button_remove_founder {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1;
+    }
+    #jur-person-founders-container .nested-founder-preview-actions .button_edit_founder:hover,
+    #jur-person-founders-container .nested-founder-preview-actions .button_remove_founder:hover {
+      color: #111827;
+      border-color: #d1d5db;
+      background: #f9fafb;
+    }
   </style>
 </head>
 

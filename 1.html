@@ -188,6 +188,53 @@
       margin:15px 0 5px;
     }
 
+    .multi-select-wrap {
+      position: relative;
+    }
+
+    .multi-select-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-family: inherit;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .multi-select-dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 2px);
+      z-index: 30;
+      background: #fff;
+      border: 1px solid #ccc;
+      max-height: 220px;
+      overflow: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .multi-select-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .multi-select-item:hover {
+      background: #f7f7f7;
+    }
+
+    .multi-select-empty {
+      padding: 8px 10px;
+      color: #777;
+      font-size: 13px;
+    }
+
     .inline-options{
       display:flex;
       flex-wrap:wrap;
@@ -840,7 +887,7 @@
 
       <div class="full-width">
         <label>Специализация (начните вводить, чтобы увидеть варианты, или выберите из списка):</label>
-        <select data-path="mainInfo.specialization" required="">
+        <select data-path="mainInfo.specialization" data-search-multi="true" multiple required="">
             <option value="" selected="selected" disabled="disabled" hidden=""></option>
             <option>Общеполитическая</option>
             <option>Специализированная-официальная</option>
@@ -883,7 +930,7 @@
             <option>Духовно-просветительная</option>
             <option>Демонстрация художественных(игровых) кинофильмов</option>
         </select>
-        <span class="subtitle">Выбранные варианты:<span>Не выбрано</span></span>
+        <span class="subtitle">Выбранные варианты: <span class="selected-values">Не выбрано</span></span>
       </div>
       <div>
         <label>
@@ -898,7 +945,7 @@
         <hr>
       <div class="full-width">
         <label>Тематика (начните вводить, чтобы увидеть варианты):</label>
-        <select data-path="mainInfo.subjects" required="">
+        <select data-path="mainInfo.subjects" data-search-multi="true" multiple required="">
             <option value="" selected="selected" disabled="disabled" hidden=""></option>
             <option>Военное дело</option>
             <option>Государство</option>
@@ -951,7 +998,7 @@
             <option>Туризм</option>
             <option>Управление
         </option></select>
-        <span class="subtitle">Выбранные варианты:<span>Не выбрано</span></span>
+        <span class="subtitle">Выбранные варианты: <span class="selected-values">Не выбрано</span></span>
       </div>
       <div>
         <label>

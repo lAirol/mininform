@@ -114,7 +114,9 @@ function toggleActive(target){
         clearFieldError(el);
 
         const isSelect = el instanceof HTMLSelectElement;
-        const value = isSelect ? (el.value || '') : (el.value || '').trim();
+        const value = isSelect
+            ? (el.multiple ? (el.selectedOptions.length ? '__selected__' : '') : (el.value || ''))
+            : (el.value || '').trim();
         const validator = el.getAttribute('data-validate');
 
         // Пустое значение считаем допустимым, если поле не обязательно
@@ -462,6 +464,11 @@ function buildJsonFromForm(container) {
         if (type === 'radio' || type === 'checkbox') {
             if (!el.checked) return;
             setPath(root, path, el.value || 'true');
+        } else if (el instanceof HTMLSelectElement && el.multiple) {
+            const selectedValues = Array.from(el.selectedOptions)
+                .map((option) => option.value)
+                .filter((value) => value !== '');
+            selectedValues.forEach((value) => setPath(root, path, value));
         } else {
             setPath(root, path, el.value);
         }
@@ -643,3 +650,119 @@ function clearValidationUI(root) {
 
     root.querySelectorAll('.input-error-text').forEach((el) => el.remove());
 }
+
+(function setupSearchableMultiSelects() {
+    const selects = Array.from(
+        document.querySelectorAll('select[data-search-multi="true"]')
+    );
+    if (!selects.length) return;
+
+    function updateSubtitle(selectEl) {
+        const subtitleValue = selectEl
+            .closest('.full-width')
+            ?.querySelector('.selected-values');
+        if (!subtitleValue) return;
+
+        const selectedLabels = Array.from(selectEl.selectedOptions)
+            .map((option) => option.textContent.trim())
+            .filter((text) => text.length > 0);
+
+        subtitleValue.textContent = selectedLabels.length
+            ? selectedLabels.join(', ')
+            : 'Не выбрано';
+    }
+
+    function closeDropdown(dropdown) {
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
+    }
+
+    function buildComponent(selectEl) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'multi-select-wrap';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'multi-select-input';
+        input.placeholder = 'Начните вводить для поиска';
+        input.autocomplete = 'off';
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'multi-select-dropdown';
+        dropdown.style.display = 'none';
+
+        const options = Array.from(selectEl.options).filter(
+            (option) => option.value && !option.disabled
+        );
+
+        function render(query) {
+            dropdown.innerHTML = '';
+            const normalized = query.trim().toLowerCase();
+            const visibleOptions = options.filter((option) =>
+                option.textContent.toLowerCase().includes(normalized)
+            );
+
+            if (!visibleOptions.length) {
+                const empty = document.createElement('div');
+                empty.className = 'multi-select-empty';
+                empty.textContent = 'Ничего не найдено';
+                dropdown.appendChild(empty);
+                return;
+            }
+
+            visibleOptions.forEach((option) => {
+                const item = document.createElement('label');
+                item.className = 'multi-select-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = option.selected;
+
+                const text = document.createElement('span');
+                text.textContent = option.textContent.trim();
+
+                checkbox.addEventListener('change', () => {
+                    option.selected = checkbox.checked;
+                    updateSubtitle(selectEl);
+                    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+
+                item.appendChild(checkbox);
+                item.appendChild(text);
+                dropdown.appendChild(item);
+            });
+        }
+
+        input.addEventListener('focus', () => {
+            render(input.value);
+            dropdown.style.display = 'block';
+        });
+
+        input.addEventListener('input', () => {
+            render(input.value);
+            dropdown.style.display = 'block';
+        });
+
+        selectEl.addEventListener('change', () => {
+            updateSubtitle(selectEl);
+            render(input.value);
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!wrapper.contains(event.target)) {
+                closeDropdown(dropdown);
+            }
+        });
+
+        selectEl.style.display = 'none';
+        selectEl.parentNode.insertBefore(wrapper, selectEl);
+        wrapper.appendChild(input);
+        wrapper.appendChild(dropdown);
+
+        render('');
+        updateSubtitle(selectEl);
+    }
+
+    selects.forEach((selectEl) => buildComponent(selectEl));
+})();

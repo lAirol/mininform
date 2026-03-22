@@ -843,6 +843,14 @@ const jur_person_founder = function () {
     }
 
     function validateFounderForm(card) {
+        if (card.classList.contains('card-jur-founder') && !jurNestedPercentsSatisfied(card)) {
+            card.querySelector('.nested-founders-block.jur-founders-inner .founders-sum')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+            return false;
+        }
+
         const fields = card.querySelectorAll('[data-path]');
         let isValid = true;
         
@@ -871,11 +879,14 @@ const jur_person_founder = function () {
             } else {
                 innerBlock.style.display = '';
                 innerBlock.removeAttribute('data-ignore-container');
+                updateSum(innerBlock);
             }
         }
 
         const iconEl = card.querySelector('.founder-preview .founder-icon');
         if (iconEl) iconEl.textContent = isStateOrg ? STATE_ORG_ICON : JUR_ICON;
+
+        syncJurFounderCardSaveEnabled(card);
     }
 
     function toggleState(card, state) {
@@ -922,6 +933,36 @@ const jur_person_founder = function () {
 
         sumEl.classList.toggle('founders-sum--complete', total === 100);
         sumEl.classList.toggle('founders-sum--incomplete', total !== 100);
+
+        const jurRootCard = block.closest('.card-jur-founder');
+        if (jurRootCard) syncJurFounderCardSaveEnabled(jurRootCard);
+    }
+
+    /** Все видимые блоки вложенных учредителей в карточке юрлица — сумма долей 100% (блоки госоргана не учитываются). */
+    function jurNestedPercentsSatisfied(card) {
+        if (!card || !card.classList.contains('card-jur-founder')) return true;
+        const blocks = card.querySelectorAll('.nested-founders-block');
+        for (let i = 0; i < blocks.length; i += 1) {
+            const b = blocks[i];
+            if (b.hasAttribute('data-ignore-container')) continue;
+            const sumEl = b.querySelector('.founders-sum');
+            if (!sumEl) continue;
+            const raw = sumEl.getAttribute('data-sum');
+            const total = raw === null || raw === '' ? NaN : parseFloat(raw, 10);
+            if (!Number.isFinite(total) || total !== 100) return false;
+        }
+        return true;
+    }
+
+    function syncJurFounderCardSaveEnabled(card) {
+        if (!card || !card.classList.contains('card-jur-founder')) return;
+        const saveBtn = card.querySelector('.founder-form-content .form-footer-actions .btn-save-founder');
+        if (!saveBtn) return;
+        const ok = jurNestedPercentsSatisfied(card);
+        saveBtn.disabled = !ok;
+        saveBtn.title = ok
+            ? ''
+            : 'Сумма долей вложенных учредителей должна быть ровно 100% по каждому юридическому лицу, для которого они заданы.';
     }
 
     function reindexRecursive(element, newPrefix) {
@@ -982,6 +1023,9 @@ const jur_person_founder = function () {
                 nameDisplay.textContent = nameInput.value || "Без имени";
             }
             updateStateOrgUI(card);
+            card.querySelectorAll('.nested-founders-block').forEach((b) => {
+                if (!b.hasAttribute('data-ignore-container')) updateSum(b);
+            });
         });
     }
 

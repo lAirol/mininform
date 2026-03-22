@@ -303,6 +303,11 @@ function toggleActive(target){
             return false;
         }
 
+        valid = addValStep3Owners(activeStep);
+        if (!valid) {
+            return false;
+        }
+
         valid = addVelStep3MeetRequirements(activeStep);
         if (!valid) {
             return false;
@@ -330,7 +335,81 @@ function toggleActive(target){
     }
 
     function addValStep3Owners(activeStep){
+        const container = document.getElementById('office-owners-container');
+        const errEl = document.getElementById('office-owners-err');
+        if (!container || !errEl) return true;
 
+        const rootBlock = container.querySelector('.nested-founders-block[data-parent-path="office"]');
+        if (!rootBlock) {
+            showFieldError(errEl, 'Необходимо добавить хотя бы одного собственника имущества');
+            if (typeof errEl.scrollIntoView === 'function') {
+                errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+
+        const list = rootBlock.querySelector('.nested-founders-list[data-owner-path="office"]');
+        const items = list ? list.querySelectorAll(':scope > .nested-founder-item') : [];
+        if (items.length === 0) {
+            showFieldError(errEl, 'Необходимо добавить хотя бы одного собственника имущества');
+            if (typeof errEl.scrollIntoView === 'function') {
+                errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+
+        function getBlockSum(block) {
+            if (!block) return NaN;
+            const listEl = block.querySelector('.nested-founders-list');
+            if (!listEl) return NaN;
+            const itemsEl = listEl.querySelectorAll(':scope > .nested-founder-item');
+            let total = 0;
+            itemsEl.forEach(item => {
+                const inp = item.querySelector('.founder-capital-percent');
+                if (inp) total += parseFloat(inp.value) || 0;
+            });
+            return Math.round(total * 100) / 100;
+        }
+
+        const rootSum = getBlockSum(rootBlock);
+        if (rootSum !== 100) {
+            showFieldError(errEl, 'Сумма долей всех собственников должна быть ровно 100%');
+            if (typeof errEl.scrollIntoView === 'function') {
+                errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+
+        function checkNestedBlocksRecursive(block) {
+            if (!block) return true;
+            const listEl = block.querySelector(':scope > .nested-founders-list');
+            if (!listEl) return true;
+            const blockItems = listEl.querySelectorAll(':scope > .nested-founder-item');
+            for (let i = 0; i < blockItems.length; i++) {
+                const item = blockItems[i];
+                if (!item.classList.contains('nested-founder-jur')) continue;
+                const stateHidden = item.querySelector('input[type="hidden"][data-path$=".isState"]');
+                if (stateHidden?.value === 'true') continue;
+                const nestedBlock = item.querySelector(':scope > .nested-founder-fields > .nested-founder-fields-inner > .nested-founders-block:not([data-ignore-container])')
+                    || item.querySelector(':scope > .nested-founder-fields > .nested-founders-block:not([data-ignore-container])');
+                if (!nestedBlock) continue;
+                const nestedSum = getBlockSum(nestedBlock);
+                if (nestedSum !== 100) return false;
+                if (!checkNestedBlocksRecursive(nestedBlock)) return false;
+            }
+            return true;
+        }
+
+        if (!checkNestedBlocksRecursive(rootBlock)) {
+            showFieldError(errEl, 'Сумма долей вложенных учредителей каждого юридического лица (кроме госоргана) должна быть ровно 100%');
+            if (typeof errEl.scrollIntoView === 'function') {
+                errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+
+        clearFieldError(errEl);
+        return true;
     }
 
     function addVelStep3MeetRequirements(activeStep){

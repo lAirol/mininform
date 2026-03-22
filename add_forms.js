@@ -1449,6 +1449,11 @@ const office_owners = function () {
             const officeContainer = getContainer();
             if (!officeContainer) return;
 
+            const officeErrEl = document.getElementById('office-owners-err');
+            if (officeErrEl && typeof clearFieldError === 'function') {
+                clearFieldError(officeErrEl);
+            }
+
             if (item) {
                 applyOfficeOwnerData(item, next);
                 const parentBlock = item.closest('.nested-founders-block');
@@ -1728,6 +1733,10 @@ const office_owners = function () {
         reindexAll();
         if (block) updateSum(block);
         updateRootVisibility();
+        const officeErrEl = document.getElementById('office-owners-err');
+        if (officeErrEl && typeof clearFieldError === 'function') {
+            clearFieldError(officeErrEl);
+        }
     }
 
     function init() {
@@ -1742,6 +1751,10 @@ const office_owners = function () {
             if (addRootBtn) {
                 const type = addRootBtn.getAttribute('data-add-office-owner');
                 getRootBlock();
+                const officeErrEl = document.getElementById('office-owners-err');
+                if (officeErrEl && typeof clearFieldError === 'function') {
+                    clearFieldError(officeErrEl);
+                }
                 openOfficeOwnerDialog({ type, parentPath: BASE_PATH, item: null });
             }
 
@@ -1794,6 +1807,10 @@ const office_owners = function () {
                 const block = addNestedBtn.closest('.nested-founders-block');
                 const type = addNestedBtn.hasAttribute('data-add-office-nested-jur') ? 'jur' : 'fiz';
                 const parentPath = block.getAttribute('data-parent-path');
+                const officeErrEl = document.getElementById('office-owners-err');
+                if (officeErrEl && typeof clearFieldError === 'function') {
+                    clearFieldError(officeErrEl);
+                }
                 openOfficeOwnerDialog({ type, parentPath, item: null });
             }
         });

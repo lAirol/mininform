@@ -298,23 +298,42 @@ function toggleActive(target){
     }
 
     function addValStep3(activeStep){
-        const elem = activeStep.querySelector(
+        const roomElem = activeStep.querySelector(
             'input[data-path="office.meetsLegalRqmts"]:checked'
         );
-        if (!elem) {
+        if (roomElem) {
+            const roomErr = roomElem.parentElement && roomElem.parentElement.parentElement;
+            if (roomElem.value === 'false') {
+                showFieldError(roomErr, "помещение должно соответствовать требованиям законодательства");
+                if (roomErr && typeof roomErr.scrollIntoView === 'function') {
+                    roomErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+            clearFieldError(roomErr);
+        }
+
+        const qualElem = activeStep.querySelector(
+            'input[data-path="office.chiefEditor.meetRequirements"]:checked'
+        );
+        if (!qualElem) {
             return true;
         }
-        const err_block = elem.parentElement && elem.parentElement.parentElement;
-        if (elem.value === 'false') {
-            showFieldError(err_block, "помещение должно соответствовать требованиям законодательства");
-            if (err_block && typeof err_block.scrollIntoView === 'function') {
-                err_block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const qualErrBlock = qualElem.closest('label') || qualElem.parentElement;
+        if (qualElem.value !== 'true') {
+            showFieldError(
+                qualErrBlock,
+                'необходимо подтвердить, что главный редактор соответствует квалификационным требованиям'
+            );
+            if (qualErrBlock && typeof qualErrBlock.scrollIntoView === 'function') {
+                qualErrBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             return false;
         }
-        clearFieldError(err_block);
+        clearFieldError(qualErrBlock);
         return true;
     }
+    
     function addValStep5(activeStep){
         let valid = addValStep5Checkboxes(activeStep);
         if(!valid){

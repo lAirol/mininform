@@ -1415,7 +1415,11 @@ const office_owners = function () {
         const countryEl = overlay.querySelector('.office-owner-dialog-country');
         if (countryEl) countryEl.value = values.country || '';
 
-        const close = () => overlay.remove();
+        const close = () => {
+            overlay.remove();
+            // Если закрыли без сохранения, снова скрыть пустой корневой блок (иначе остаётся «0% — ДОБАВЬТЕ УЧРЕДИТЕЛЯ» после getRootBlock).
+            updateRootVisibility();
+        };
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) close();
         });

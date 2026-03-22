@@ -283,6 +283,7 @@ const physical_person_founder = function () {
                 if (newCard) {
                     updateComplianceState(newCard);
                 }
+                clearFieldError(document.getElementById('err_block'));
             });
         });
 
@@ -1000,6 +1001,7 @@ const jur_person_founder = function () {
             if (FILLER_LIST) FILLER_LIST.style.display = 'none';
             const newCard = container.querySelector(`.card-jur-founder[data-jur-person-index="${idx}"]`);
             if (newCard) updateStateOrgUI(newCard);
+            clearFieldError(document.getElementById('err_block'));
         }));
 
         document.addEventListener('click', (e) => {
@@ -1757,6 +1759,7 @@ const domain_owner_container = function () {
         const isFiz = type === 'fiz';
         container.innerHTML = `
       <div class="card_wrapper" data-owner-type="${type}">
+      <div class="domain-owner-title">Добавление владельца СМИ – ${isFiz ? 'физического лица:' : 'юридического лица:'}</div>
         <button type="button" class="button_remove" title="Удалить" aria-label="Удалить" data-domain-owner-remove>×</button>
 
         <div class="row">
@@ -1816,6 +1819,7 @@ const domain_owner_container = function () {
     document.addEventListener('click', (e) => {
         const addBtn = e.target.closest('[data-domain-owner-add]');
         if (addBtn) {
+            clearFieldError(document.getElementById('err_block'));
             const type = addBtn.getAttribute('data-domain-owner-add');
             renderOwnerCard(type);
             return;
@@ -2063,6 +2067,7 @@ const sponsors_financing = function () {
                 container.insertAdjacentHTML('beforeend', buildSponsorCard(idx, type));
                 const newCard = container.querySelector(`.card-sponsor[data-sponsor-index="${idx}"]`);
                 if (newCard) toggleSponsorState(newCard, 'editing');
+                steps.addValStep5Sponsors();
                 return;
             }
 

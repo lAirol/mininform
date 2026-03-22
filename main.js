@@ -111,6 +111,12 @@ function toggleActive(target){
             return true;
         }
 
+        // Как и при сборе JSON (buildJsonFromForm): не валидируем поля в отключённых блоках
+        if (el.closest('[data-ignore-container]')) {
+            clearFieldError(el);
+            return true;
+        }
+
         clearFieldError(el);
 
         const isSelect = el instanceof HTMLSelectElement;
@@ -213,7 +219,116 @@ function toggleActive(target){
             }
         }
 
+        if(allValid) {
+            allValid = additionalStepValidate(index,step);
+        }
+
         return allValid;
+    }
+
+    function additionalStepValidate(index,step) {
+        let valid = true;
+        index++;
+        switch (index) {
+            case 2:
+                valid = addValStep2(step);
+                break;
+            case 3:
+                valid = addValStep3(step);
+                break;
+            case 5:
+                valid = addValStep5(step);
+                break;
+        }
+        return valid;
+    }
+
+    function addValStep2(){
+        let founder_type = document.getElementById('founder').hasAttribute('data-ignore-container') ?  "domain_owner" : "founder";
+        let innText = null;
+        if(founder_type === "founder"){
+            let p =document.getElementById("physical-person-founders-container");
+            let j = document.getElementById("jur-person-founders-container");
+            innText = p.innerText.trim() + j.innerText.trim();
+        }else{
+            let d = document.getElementById("domain-owner-container");
+            innText = d.innerText.trim();
+        }
+
+        if(innText === ""){
+            let w = document.getElementById("err_block");
+            let errorMessage = (founder_type === "founder")? "необходимо заполнить реквизиты учредителей" : "необходимо заполнить владельца сетевого издания";
+            if (w){
+                showFieldError(w, errorMessage);
+                w.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }else{
+            clearFieldError(document.getElementById('err_block'));
+        }
+        return true;
+    }
+
+    function addValStep3(activeStep){
+        const elem = activeStep.querySelector(
+            'input[data-path="office.meetsLegalRqmts"]:checked'
+        );
+        if (!elem) {
+            return true;
+        }
+        const err_block = elem.parentElement && elem.parentElement.parentElement;
+        if (elem.value === 'false') {
+            showFieldError(err_block, "помещение должно соответствовать требованиям законодательства");
+            if (err_block && typeof err_block.scrollIntoView === 'function') {
+                err_block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+        clearFieldError(err_block);
+        return true;
+    }
+    function addValStep5(activeStep){
+        let valid = addValStep5Checkboxes(activeStep);
+        if(!valid){
+            return false;
+        }
+        valid = addValStep5Sponsors();
+        return valid;
+    }
+
+    function addValStep5Checkboxes(activeStep){
+        const elem = activeStep.querySelector(
+            'input[data-path="financingMeetsLegalRqmts"]:checked'
+        );
+        if (!elem) {
+            return true;
+        }
+        const err_block = elem.parentElement && elem.parentElement.parentElement;
+        if (elem.value === 'false') {
+            showFieldError(err_block, "главный редактор должен соответствовать квалификационным требованиям");
+            if (err_block && typeof err_block.scrollIntoView === 'function') {
+                err_block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+        clearFieldError(err_block);
+        return true;
+    }
+
+    function addValStep5Sponsors(){
+        let container = document.getElementById('sponsors-container');
+        let err_block = container.nextElementSibling;
+        if(container.innerText.trim() === ""){
+            showFieldError(err_block, "необходимо заполнить источнки поступления средств");
+            return false;
+        }else{
+            clearFieldError(err_block);
+        }
+        return true;
+    }
+
+    function addValStep6(activeStep){
+
     }
 
     function validateAllSteps() {
@@ -297,7 +412,7 @@ function toggleActive(target){
         if (validator === 'percent') {
             let v = target.value;
             const orig = v;
-            v = v.replace(/[^0-9.,-]/g, '');
+            v = v.replace(/[^0-9.,]/g, '');
             // оставляем только один разделитель
             const parts = v.split(/[.,]/);
             if (parts.length > 1) {
@@ -369,7 +484,7 @@ function toggleActive(target){
 
         progress.textContent = `ШАГ ${current + 1} из ${steps.length}`;
         prevBtn.disabled = current === 0;
-        nextBtn.textContent = current === steps.length - 1 ? 'Готово' : 'дальше';
+        nextBtn.textContent = current === steps.length - 1 ? 'Отправить заявление на регистрацию' : 'дальше';
 
         if (scroll) {
             steps[current].scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -379,16 +494,17 @@ function toggleActive(target){
     }
 
     prevBtn.addEventListener('click', () => showStep(current - 1));
-    nextBtn.addEventListener('click', () => {
+    nextBtn.addEventListener('click', async () => {
+
         // Перед переходом дальше валидируем текущий шаг
         if (!validateStep(current)) {
             return;
         }
-
         if (current === steps.length - 1) {
-            steps[current].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            await sendData();
             return;
         }
+
         showStep(current + 1);
     });
 
@@ -407,6 +523,11 @@ function toggleActive(target){
     // Делаем функцию проверки всех шагов доступной снаружи
     window._validateAllSteps = validateAllSteps;
     window.validateField = validateField;
+    window.steps = {};
+    window.steps.addValStep3 = addValStep3.bind(this);
+    window.steps.addValStep5 = addValStep5.bind(this);
+    window.steps.addValStep5Checkboxes = addValStep5Checkboxes.bind(this);
+    window.steps.addValStep5Sponsors = addValStep5Sponsors.bind(this);
 })();
 
 // Сборка JSON по data-path
@@ -495,55 +616,49 @@ function mergeFounders(obj) {
     return obj;
 }
 
-(function () {
-    const btn = document.getElementById('submitJsonBtn');
+async function sendData() {
     const container = document.querySelector('.container');
-    if (!btn || !container) return;
+    if (!container) return;
+    // Перед сборкой JSON проверяем все шаги
+    if (typeof window._validateAllSteps === 'function') {
+        if (!window._validateAllSteps()) {
+            return;
+        }
+    }
 
-    btn.addEventListener('click', async () => {
-        // Перед сборкой JSON проверяем все шаги
-        if (typeof window._validateAllSteps === 'function') {
-            if (!window._validateAllSteps()) {
-                return;
-            }
+    const data = buildJsonFromForm(container);
+    console.log('Собранный JSON:', data);
+
+    try {
+        const response = await fetch(send_url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            alert('Ошибка при формировании PDF на сервере');
+            return;
         }
 
-        const data = buildJsonFromForm(container);
-        console.log('Собранный JSON:', data);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
 
-        try {
-            const response = await fetch(send_url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'zayavlenie_smi.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
 
-            if (!response.ok) {
-                alert('Ошибка при формировании PDF на сервере');
-                return;
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'zayavlenie_smi.pdf';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-
-            window.URL.revokeObjectURL(url);
-        } catch (e) {
-            console.error(e);
-            alert('Не удалось отправить данные на сервер или получить PDF');
-        }
-    });
-})();
-
-
+        window.URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error(e);
+        alert('Не удалось отправить данные на сервер или получить PDF');
+    }
+}
 
 (function () {
     function setupOtherField(radioName, otherInputSelector) {
@@ -598,10 +713,10 @@ function clearFieldError(el) {
 }
 
 
-function changeFace(){
+function changeFace(type){
     let domainOwner = document.getElementById('domainOwner');
     let founder = document.getElementById('founder');
-    if(domainOwner.hasAttribute("data-ignore-container")){
+    if(type === "fizFace"){
         setIgnore(founder);
         removeIgnore(domainOwner);
         show(domainOwner);
@@ -630,6 +745,14 @@ function show(el) {
 function hide(el) {
     if (!el) return;
     el.style.display = 'none';
+}
+
+function changeMeetsLegalRqmts(){
+    steps.addValStep3(document.querySelector('.step.active'));
+}
+
+function changeFinancingMeetsLegalRqmts(){
+    steps.addValStep5Checkboxes(document.querySelector('.step.active'));
 }
 
 function clearValidationUI(root) {

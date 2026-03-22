@@ -229,6 +229,13 @@ textarea{
 
 .inline-options{
     display:flex;
+    /*flex-wrap:wrap;*/
+    gap:15px;
+    margin:5px 0 10px;
+}
+
+.inline-options-wrap{
+    display:flex;
     flex-wrap:wrap;
     gap:15px;
     margin:5px 0 10px;
@@ -675,4 +682,10 @@ button:disabled{
     color: #111827;
     border-color: #d1d5db;
     background: #f9fafb;
+}
+
+.domain-owner-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 16px;
 }

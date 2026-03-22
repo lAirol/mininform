@@ -80,61 +80,64 @@
             <h3>2.1 Тип</h3>
 
             <div class="inline-options">
-                <label><input type="radio" name="founder_type" value="jurFace" checked="checked" onchange="changeFace()">Учредитель</label>
-                <label><input type="radio" name="founder_type" value="fizFace" onchange="changeFace()">Владелец сетевого издания</label>
+                <label><input type="radio" name="founder_type" value="jurFace" checked="checked" onchange="changeFace('jurFace')">Учредитель</label>
+                <label><input type="radio" name="founder_type" value="fizFace" onchange="changeFace('fizFace')">Владелец сетевого издания</label>
             </div>
 
         </div>
 
+        <div class="card">
+            <div id="founder">
 
-        <div id="founder" class="card">
+                <h3>2.2 Реквизиты учредителей сми <span id="person_name"></span></h3>
 
-            <h3>2.2 Реквизиты учредителей сми <span id="person_name"></span></h3>
-
-            <div style="margin-left:20px">
-                <div id="filler_2_2_list">
-                  <hr>
-                    <label>Список учередителей пока пуст(поменять фикс маргин у дива выше и при создании ниже)</label>
-                  <hr>
+                <div style="margin-left:20px">
+                    <div id="filler_2_2_list">
+                        <hr>
+                        <label>Список учередителей пока пуст(поменять фикс маргин у дива выше и при создании ниже)</label>
+                        <hr>
+                    </div>
+                    <div id="min_founder"></div>
+                    <div id="physical-person-founders-container"></div>
+                    <div id="jur-person-founders-container"></div>
+                    <div class="row">
+                        <div>
+                            <div class="add-action" data-add-physical-founder>
+                                <span class="circle-plus">+</span>
+                                <span>Добавить владельца - физическое лицо</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="add-action" data-add-jur-founder>
+                                <span class="circle-plus">+</span>
+                                <span>Добавить владельца - юридическое лицо</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div id="min_founder"></div>
-                <div id="physical-person-founders-container"></div>
-                <div id="jur-person-founders-container"></div>
+            </div>
+
+            <div id="domainOwner"  style="display: none" data-ignore-container="">
+                <h3>2.2 Владелец сетевого издания</h3>
                 <div class="row">
                     <div>
-                        <div class="add-action" data-add-physical-founder>
+                        <div class="add-action" data-domain-owner-add="fiz">
                             <span class="circle-plus">+</span>
                             <span>Добавить владельца - физическое лицо</span>
                         </div>
                     </div>
                     <div>
-                        <div class="add-action" data-add-jur-founder>
+                        <div class="add-action" data-domain-owner-add="jur">
                             <span class="circle-plus">+</span>
                             <span>Добавить владельца - юридическое лицо</span>
                         </div>
                     </div>
                 </div>
+                <div id="domain-owner-container"></div>
             </div>
+            <div id="err_block"></div>
         </div>
 
-        <div id="domainOwner" class="card" style="display: none" data-ignore-container="">
-            <h3>2.2 Владелец сетевого издания</h3>
-            <div class="row">
-                <div>
-                    <div class="add-action" data-domain-owner-add="fiz">
-                        <span class="circle-plus">+</span>
-                        <span>Добавить владельца - физическое лицо</span>
-                    </div>
-                </div>
-                <div>
-                    <div class="add-action" data-domain-owner-add="jur">
-                        <span class="circle-plus">+</span>
-                        <span>Добавить владельца - юридическое лицо</span>
-                    </div>
-                </div>
-            </div>
-            <div id="domain-owner-container"></div>
-        </div>
 
     </div>
 
@@ -207,14 +210,12 @@
         </div>
       </div>
 
-      <div class="inline-options">
-        <label>
-          <input type="radio" name="room" value="true" data-path="office.meetsLegalRqmts"> Да
-          <input type="radio" name="room" value="false" data-path="office.meetsLegalRqmts" checked="checked"> Нет
-          <span>Помещение, в котором размещается юридическое лицо, на 
+      <div class="inline-options-wrap">
+          <label style=""><input type="radio" name="room" value="true" data-path="office.meetsLegalRqmts" onchange="changeMeetsLegalRqmts()"> Да</label>
+          <label><input type="radio" name="room" value="false" data-path="office.meetsLegalRqmts" checked="checked" onchange="changeMeetsLegalRqmts()"> Нет</label>
+          <span style="flex: 1;">Помещение, в котором размещается юридическое лицо, на
             которое возложены функции редакции средства массовой информации,
             соответствует требованиям законодательства</span>
-        </label>
       </div>
 
       <div class="row">
@@ -443,7 +444,7 @@
 
       <div class="subtitle">Периодичность средства массовой информации:</div>
 
-      <div class="inline-options">
+      <div class="inline-options-wrap">
         <label><input type="radio" name="periodicity" value="Ежедневно" data-path="mainInfo.periodicity" checked="checked"> Ежедневно</label>
         <label><input type="radio" name="periodicity" value="Еженедельно" data-path="mainInfo.periodicity"> Еженедельно</label>
         <label><input type="radio" name="periodicity" value="Несколько раз в неделю" data-path="mainInfo.periodicity"> Несколько раз в неделю</label>
@@ -459,7 +460,7 @@
 
       <div class="subtitle">Максимальный объём вещания:</div>
 
-      <div class="inline-options">
+      <div class="inline-options-wrap">
         <label><input type="radio" name="volumeVoice" value="до 1 часа" data-path="mainInfo.volumeVoice" checked="checked"> до 1 часа</label>
         <label><input type="radio" name="volumeVoice" value="1 - 6 часов" data-path="mainInfo.volumeVoice"> 1 - 6 часов</label>
         <label><input type="radio" name="volumeVoice" value="6 - 12 часов" data-path="mainInfo.volumeVoice"> 6 - 12 часов</label>
@@ -503,7 +504,7 @@
 
         
         <div class="subtitle">Предполагаемая территория распростанения средства массовой информации:</div>
-        <div class="inline-options">
+        <div class="inline-options-wrap">
             <label><input type="radio" name="distributionTerritory" value="Международная" data-path="mainInfo.distributionTerritory" checked="checked"> Международная</label>
             <label><input type="radio" name="distributionTerritory" value="Республика Беларусь" data-path="mainInfo.distributionTerritory"> Республика Беларусь</label>
             <label><input type="radio" name="distributionTerritory" value="Область" data-path="mainInfo.distributionTerritory"> Область</label>
@@ -539,8 +540,8 @@
       <h3>5.1 Подтверждение законности финансирования</h3>
 
       <div class="inline-options">
-        <label><input type="radio" name="financing_ok" value="true" data-path="financingMeetsLegalRqmts"> Да</label>
-        <label><input type="radio" name="financing_ok" value="false" data-path="financingMeetsLegalRqmts" checked="checked"> Нет</label>
+        <label><input type="radio" name="financing_ok" value="true" data-path="financingMeetsLegalRqmts" onchange="changeFinancingMeetsLegalRqmts()"> Да</label>
+        <label><input type="radio" name="financing_ok" value="false" data-path="financingMeetsLegalRqmts" checked="checked" onchange="changeFinancingMeetsLegalRqmts()"> Нет</label>
         <span>Главный редактор соответствует квалификационным требованиям</span>
       </div>
 
@@ -606,7 +607,7 @@
             <span>Я подтверждаю, что все введенные
                 данные верны и соответствуют
                 действительности</span>
-            <input type="button" value="Отправить заявление на регистрацию" id="submitJsonBtn">
+<!--            <input type="button" value="Отправить заявление на регистрацию" id="submitJsonBtn">-->
         </div>
 
     </div>

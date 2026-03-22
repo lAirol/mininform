@@ -1029,6 +1029,10 @@ const jur_person_founder = function () {
                         if (elem) {
                             elem.innerHTML = "Редактирование учредителя СМИ – юридическое лицо";
                         }
+                        let bnt = document.querySelector(".btn-save-founder");
+                        if(bnt){
+                            bnt.innerText = "Редактировать";
+                        }
                     } else {
                         card.querySelector('.input-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }

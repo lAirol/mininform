@@ -272,11 +272,15 @@
                 <input type="text" data-path="office.chiefEditor.actAssignment" required="">
             </div>
         </div>
-        <label>
-            <input type="radio" name="qualification" value="true" data-path="office.chiefEditor.meetRequirements"> Да
-            <input type="radio" name="qualification" value="false" data-path="office.chiefEditor.meetRequirements" checked="checked"> Нет
-            <span>Главный редактор соответствует квалификационным требованиям</span>
-        </label>
+        <div class="inline-options-wrap">
+            <label>
+                <input type="radio" name="qualification" value="true" data-path="office.chiefEditor.meetRequirements" onchange="changeMeetRequirements()"> Да
+            </label>
+            <label>
+                <input type="radio" name="qualification" value="false" data-path="office.chiefEditor.meetRequirements" checked="checked" onchange="changeMeetRequirements()"> Нет
+                <span>Главный редактор соответствует квалификационным требованиям</span>
+            </label>
+        </div>
         <h7>Образование:</h7>
 
         <div class="row">

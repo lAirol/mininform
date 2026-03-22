@@ -298,15 +298,51 @@ function toggleActive(target){
     }
 
     function addValStep3(activeStep){
+        let valid = addValStep3MeetsLegalRqmts(activeStep);
+        if (!valid) {
+            return false;
+        }
+
+        valid = addVelStep3MeetRequirements(activeStep);
+        if (!valid) {
+            return false;
+        }
+        return valid;
+    }
+
+    function addValStep3MeetsLegalRqmts(activeStep){
         const elem = activeStep.querySelector(
             'input[data-path="office.meetsLegalRqmts"]:checked'
         );
         if (!elem) {
             return true;
         }
-        const err_block = elem.parentElement && elem.parentElement.parentElement;
+        const err_block = elem.parentElement.parentElement;
         if (elem.value === 'false') {
             showFieldError(err_block, "помещение должно соответствовать требованиям законодательства");
+            if (err_block && typeof err_block.scrollIntoView === 'function') {
+                err_block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+        clearFieldError(err_block);
+        return true;
+    }
+
+    function addValStep3Owners(activeStep){
+
+    }
+
+    function addVelStep3MeetRequirements(activeStep){
+        const elem = activeStep.querySelector(
+            'input[data-path="office.chiefEditor.meetRequirements"]:checked'
+        );
+        if (!elem) {
+            return true;
+        }
+        const err_block = elem.parentElement.parentElement;
+        if (elem.value === 'false') {
+            showFieldError(err_block, "главный редактор должен соответствовать квалификационным требованиям");
             if (err_block && typeof err_block.scrollIntoView === 'function') {
                 err_block.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
@@ -554,6 +590,8 @@ function toggleActive(target){
     window.validateField = validateField;
     window.steps = {};
     window.steps.addValStep3 = addValStep3.bind(this);
+    window.steps.addValStep3MeetsLegalRqmts = addValStep3MeetsLegalRqmts.bind(this);
+    window.steps.addVelStep3MeetRequirements = addVelStep3MeetRequirements.bind(this);
     window.steps.addValStep5 = addValStep5.bind(this);
     window.steps.addValStep5Checkboxes = addValStep5Checkboxes.bind(this);
     window.steps.addValStep5Sponsors = addValStep5Sponsors.bind(this);
@@ -777,7 +815,11 @@ function hide(el) {
 }
 
 function changeMeetsLegalRqmts(){
-    steps.addValStep3(document.querySelector('.step.active'));
+    steps.addValStep3MeetsLegalRqmts(document.querySelector('.step.active'));
+}
+
+function changeMeetRequirements(){
+    steps.addVelStep3MeetRequirements(document.querySelector('.step.active'));
 }
 
 function changeFinancingMeetsLegalRqmts(){

@@ -298,39 +298,21 @@ function toggleActive(target){
     }
 
     function addValStep3(activeStep){
-        const roomElem = activeStep.querySelector(
+        const elem = activeStep.querySelector(
             'input[data-path="office.meetsLegalRqmts"]:checked'
         );
-        if (roomElem) {
-            const roomErr = roomElem.parentElement && roomElem.parentElement.parentElement;
-            if (roomElem.value === 'false') {
-                showFieldError(roomErr, "помещение должно соответствовать требованиям законодательства");
-                if (roomErr && typeof roomErr.scrollIntoView === 'function') {
-                    roomErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-                return false;
-            }
-            clearFieldError(roomErr);
-        }
-
-        const qualElem = activeStep.querySelector(
-            'input[data-path="office.chiefEditor.meetRequirements"]:checked'
-        );
-        if (!qualElem) {
+        if (!elem) {
             return true;
         }
-        const qualErrBlock = qualElem.closest('label') || qualElem.parentElement;
-        if (qualElem.value !== 'true') {
-            showFieldError(
-                qualErrBlock,
-                'необходимо подтвердить, что главный редактор соответствует квалификационным требованиям'
-            );
-            if (qualErrBlock && typeof qualErrBlock.scrollIntoView === 'function') {
-                qualErrBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const err_block = elem.parentElement && elem.parentElement.parentElement;
+        if (elem.value === 'false') {
+            showFieldError(err_block, "помещение должно соответствовать требованиям законодательства");
+            if (err_block && typeof err_block.scrollIntoView === 'function') {
+                err_block.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             return false;
         }
-        clearFieldError(qualErrBlock);
+        clearFieldError(err_block);
         return true;
     }
     

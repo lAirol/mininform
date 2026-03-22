@@ -244,28 +244,56 @@ function toggleActive(target){
     }
 
     function addValStep2(){
-        let founder_type = document.getElementById('founder').hasAttribute('data-ignore-container') ?  "domain_owner" : "founder";
-        let innText = null;
-        if(founder_type === "founder"){
-            let p =document.getElementById("physical-person-founders-container");
-            let j = document.getElementById("jur-person-founders-container");
-            innText = p.innerText.trim() + j.innerText.trim();
-        }else{
-            let d = document.getElementById("domain-owner-container");
-            innText = d.innerText.trim();
+        const founderEl = document.getElementById('founder');
+        const founder_type = founderEl && founderEl.hasAttribute('data-ignore-container')
+            ? 'domain_owner'
+            : 'founder';
+        const w = document.getElementById('err_block');
+
+        if (founder_type === 'founder') {
+            const p = document.getElementById('physical-person-founders-container');
+            const j = document.getElementById('jur-person-founders-container');
+            const innText =
+                ((p && p.innerText) || '').trim() + ((j && j.innerText) || '').trim();
+
+            if (innText === '') {
+                if (w) {
+                    showFieldError(w, 'необходимо заполнить реквизиты учредителей');
+                    w.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+
+            const unsavedCard =
+                (p && p.querySelector('.card-physical-founder[data-state="editing"]')) ||
+                (j && j.querySelector('.card-jur-founder[data-state="editing"]'));
+            if (unsavedCard) {
+                if (w) {
+                    showFieldError(
+                        w,
+                        'Заполните карточку и сохраните учредителя кнопкой «Добавить учредителя сми» либо отмените ввод кнопкой «Отменить».'
+                    );
+                }
+                if (typeof unsavedCard.scrollIntoView === 'function') {
+                    unsavedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+
+            if (w) clearFieldError(w);
+            return true;
         }
 
-        if(innText === ""){
-            let w = document.getElementById("err_block");
-            let errorMessage = (founder_type === "founder")? "необходимо заполнить реквизиты учредителей" : "необходимо заполнить владельца сетевого издания";
-            if (w){
-                showFieldError(w, errorMessage);
+        const d = document.getElementById('domain-owner-container');
+        const innText = ((d && d.innerText) || '').trim();
+        if (innText === '') {
+            if (w) {
+                showFieldError(w, 'необходимо заполнить владельца сетевого издания');
                 w.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             return false;
-        }else{
-            clearFieldError(document.getElementById('err_block'));
         }
+        if (w) clearFieldError(w);
         return true;
     }
 

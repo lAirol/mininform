@@ -48,6 +48,7 @@ const physical_person_founder = function () {
             toggleState(card, 'saved');
             updateComplianceState(card);
             clearValidationUI(card);
+            clearFieldError(document.getElementById('err_block'));
             return;
         }
 
@@ -81,6 +82,7 @@ const physical_person_founder = function () {
         toggleState(card, 'saved');
         updateComplianceState(card);
         clearValidationUI(card);
+        clearFieldError(document.getElementById('err_block'));
     }
 
     function reindexPhysicalCardNode(cardNode, newIndex) {
@@ -303,9 +305,14 @@ const physical_person_founder = function () {
                     card.dataset.isNew = '0';
                     snapshotSaved(card);
                     FILLER_LIST.style.display = 'none';
+                    clearFieldError(document.getElementById('err_block'));
                     let elem = card.querySelector('.physical-founder-title');
                     if (elem) {
                         elem.innerText = "Редактированое учредителя СМИ – физическое лицо";
+                    }
+                    let bnt = card.querySelector('.btn-save-founder');
+                    if(bnt){
+                        bnt.innerText = "Редактировать учредителя сми";
                     }
                 } else {
                     card.querySelector('.input-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -420,6 +427,7 @@ const jur_person_founder = function () {
         if (!state) {
             toggleState(card, 'saved');
             clearValidationUI(card);
+            clearFieldError(document.getElementById('err_block'));
             return;
         }
 
@@ -474,6 +482,7 @@ const jur_person_founder = function () {
         });
 
         clearValidationUI(card);
+        clearFieldError(document.getElementById('err_block'));
     }
 
     const COUNTRY_OPTIONS = `
@@ -1015,6 +1024,7 @@ const jur_person_founder = function () {
                         card.dataset.isNew = '0';
                         snapshotSaved(card);
                         if (FILLER_LIST) FILLER_LIST.style.display = 'none';
+                        clearFieldError(document.getElementById('err_block'));
                         let elem = document.querySelector(".jur-founder-title");
                         if (elem) {
                             elem.innerHTML = "Редактирование учредителя СМИ – юридическое лицо";

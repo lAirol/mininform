@@ -766,11 +766,11 @@ async function sendData() {
     const container = document.querySelector('.container');
     if (!container) return;
     // Перед сборкой JSON проверяем все шаги
-    if (typeof window._validateAllSteps === 'function') {
-        if (!window._validateAllSteps()) {
-            return;
-        }
-    }
+    // if (typeof window._validateAllSteps === 'function') {
+    //     if (!window._validateAllSteps()) {
+    //         return;
+    //     }
+    // }
 
     const data = buildJsonFromForm(container);
     console.log('Собранный JSON:', data);

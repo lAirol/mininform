@@ -637,6 +637,11 @@ const jur_person_founder = function () {
                 }
             }
         }
+
+        // При смене `isState` у вложенного юрлица нужно пересчитать доступность кнопки
+        // "Сохранить" у корневой карточки (потому что там валидируется сумма 100%).
+        const jurRootCard = item.closest('.card-jur-founder');
+        if (jurRootCard) syncJurFounderCardSaveEnabled(jurRootCard);
     }
 
     function openNestedFounderDialog({ type, parentPath, item }) {
@@ -941,11 +946,27 @@ const jur_person_founder = function () {
     /** Все видимые блоки вложенных учредителей в карточке юрлица — сумма долей 100% (блоки госоргана не учитываются). */
     function jurNestedPercentsSatisfied(card) {
         if (!card || !card.classList.contains('card-jur-founder')) return true;
+        const cardStateRadioYes = card.querySelector('input[type="radio"][data-path$=".isState"][value="true"]');
+        const cardIsStateOrg = !!cardStateRadioYes?.checked;
         const blocks = card.querySelectorAll('.nested-founders-block');
         for (let i = 0; i < blocks.length; i += 1) {
             const b = blocks[i];
             if (b.hasAttribute('data-ignore-container')) continue;
-            const sumEl = b.querySelector('.founders-sum');
+
+            if (cardIsStateOrg && b.classList.contains('jur-founders-inner')) continue;
+
+            const parentPath = b.getAttribute('data-parent-path');
+            if (parentPath) {
+                const ownerItem = card.querySelector(`.nested-founder-item[data-founder-path="${parentPath}"]`);
+                const stateHidden = ownerItem?.querySelector(`input[type="hidden"][data-path="${parentPath}.isState"]`);
+                if (stateHidden?.value === 'true') continue;
+            }
+
+            // Важно: тут нужно брать founders-sum именно "текущего" блока,
+            const ownerPathForSum = b.getAttribute('data-parent-path');
+            const sumEl = (ownerPathForSum
+                ? b.querySelector(`:scope > .founders-sum[data-owner-path="${ownerPathForSum}"]`)
+                : null) || b.querySelector(':scope > .founders-sum');
             if (!sumEl) continue;
             const raw = sumEl.getAttribute('data-sum');
             const total = raw === null || raw === '' ? NaN : parseFloat(raw, 10);

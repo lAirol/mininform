@@ -785,21 +785,24 @@ async function sendData() {
         });
 
         if (!response.ok) {
-            alert('Ошибка при формировании PDF на сервере');
+            let msg = 'Ошибка при отправке заявки';
+            try {
+                const json = await response.json();
+                if (Array.isArray(json.errors) && json.errors.length > 0) {
+                    msg = json.errors.join('\n');
+                }
+            } catch (_) {}
+            alert(msg);
             return;
         }
 
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'zayavlenie_smi.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        window.URL.revokeObjectURL(url);
+        let result;
+        try {
+            result = await response.json();
+        } catch (_) {
+            result = {};
+        }
+        alert(result.message || 'Заявка успешно принята');
     } catch (e) {
         console.error(e);
         alert('Не удалось отправить данные на сервер или получить PDF');

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/tfpdf/tfpdf.php';
+require __DIR__ . '/validate_smi_json.php';
 
 $raw = file_get_contents('php://input');
 $rawTrim = is_string($raw) ? trim($raw) : '';
@@ -12,8 +13,16 @@ if ($rawTrim === '') {
 $data = json_decode($raw ?? '', true);
 if (!is_array($data)) {
     http_response_code(400);
-    echo 'Invalid JSON';
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['errors' => ['Некорректный JSON']], JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+$validation = validateSmiJson($data);
+if (!$validation['ok']) {
+    http_response_code(400);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['errors' => $validation['errors']], JSON_UNESCAPED_UNICODE);
 }
 
 class PDF extends tFPDF {
@@ -546,6 +555,14 @@ if ($confirm !== null) {
     $pdf->Row2Col('11.2. Ответ', yn((bool)$confirm));
 }
 
-$outMode = (PHP_SAPI === 'cli') ? 'F' : 'I';
-$outFile = (PHP_SAPI === 'cli') ? (__DIR__ . DIRECTORY_SEPARATOR . 'zayavlenie_smi_test.pdf') : 'zayavlenie_smi.pdf';
-$pdf->Output($outMode, $outFile);
+$outDir = __DIR__ . DIRECTORY_SEPARATOR . 'generated';
+if (!is_dir($outDir)) {
+    @mkdir($outDir, 0755, true);
+}
+$outFile = $outDir . DIRECTORY_SEPARATOR . 'zayavlenie_smi_' . date('Y-m-d_His') . '.pdf';
+$pdf->Output('F', $outFile);
+
+if (PHP_SAPI !== 'cli') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['message' => 'Заявка успешно принята'], JSON_UNESCAPED_UNICODE);
+}

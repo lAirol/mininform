@@ -17,7 +17,6 @@ if (!is_array($data)) {
     echo json_encode(['errors' => ['Некорректный JSON']], JSON_UNESCAPED_UNICODE);
     exit;
 }
-
 $validation = validateSmiJson($data);
 if (!$validation['ok']) {
     http_response_code(400);
@@ -555,11 +554,20 @@ if ($confirm !== null) {
     $pdf->Row2Col('11.2. Ответ', yn((bool)$confirm));
 }
 
-$outDir = __DIR__ . DIRECTORY_SEPARATOR . 'generated';
+const UPLOADS_BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'uploads';
+
+$typeSmi = $data['mainInfo']['typeSmi'] ?? '';
+$type = implode('_', preg_split('/\s+/u', (string) $typeSmi, -1, PREG_SPLIT_NO_EMPTY)) ?: 'smi';
+$timestamp = date('Y-m-d_H-i-s');
+$outDir = UPLOADS_BASE_PATH . DIRECTORY_SEPARATOR . $timestamp . '_' . $type;
 if (!is_dir($outDir)) {
     @mkdir($outDir, 0755, true);
 }
-$outFile = $outDir . DIRECTORY_SEPARATOR . 'zayavlenie_smi_' . date('Y-m-d_His') . '.pdf';
+
+$jsonFile = $outDir . DIRECTORY_SEPARATOR . 'input.json';
+file_put_contents($jsonFile, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+$outFile = $outDir . DIRECTORY_SEPARATOR . 'zayavlenie_smi_' . $type . '.pdf';
 $pdf->Output('F', $outFile);
 
 if (PHP_SAPI !== 'cli') {

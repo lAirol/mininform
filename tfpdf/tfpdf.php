@@ -22,7 +22,7 @@ protected $state;              // current document state
 protected $compress;           // compression flag
 protected $k;                  // scale factor (number of points in user unit)
 protected $DefOrientation;     // default orientation
-protected $CurOrientation;     // current orientation
+public $CurOrientation;     // current orientation
 protected $StdPageSizes;       // standard page sizes
 protected $DefPageSize;        // default page size
 protected $CurPageSize;        // current page size
@@ -60,7 +60,7 @@ protected $images;             // array of used images
 protected $PageLinks;          // array of links in pages
 protected $links;              // array of internal links
 protected $AutoPageBreak;      // automatic page breaking
-protected $PageBreakTrigger;   // threshold used to trigger page breaks
+public $PageBreakTrigger;   // threshold used to trigger page breaks
 protected $InHeader;           // flag set when processing header
 protected $InFooter;           // flag set when processing footer
 protected $AliasNbPages;       // alias for total number of pages

@@ -689,3 +689,185 @@ button:disabled{
     font-weight: bold;
     margin: 0 0 16px;
 }
+
+/* Toast уведомления (ошибка / подсказка при отправке) */
+.smi-toast {
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(calc(100% + 24px));
+    transition:
+        opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.smi-toast--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.smi-toast:not(.smi-toast--visible) .smi-toast__surface {
+    pointer-events: none;
+}
+
+.smi-toast__surface {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    max-width: min(440px, 100%);
+    padding: 14px 14px 14px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #0f172a;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow:
+        0 4px 6px -1px rgba(15, 23, 42, 0.06),
+        0 24px 48px -12px rgba(15, 23, 42, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.smi-toast--error .smi-toast__surface {
+    border-color: rgba(220, 38, 38, 0.2);
+    background: linear-gradient(
+        145deg,
+        rgba(254, 242, 242, 0.96) 0%,
+        rgba(255, 255, 255, 0.94) 100%
+    );
+}
+
+.smi-toast--info .smi-toast__surface {
+    border-color: rgba(37, 99, 235, 0.18);
+    background: linear-gradient(
+        145deg,
+        rgba(239, 246, 255, 0.96) 0%,
+        rgba(255, 255, 255, 0.94) 100%
+    );
+}
+
+.smi-toast__icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: none;
+}
+
+.smi-toast--error .smi-toast__icon--error {
+    display: block;
+    color: #dc2626;
+}
+
+.smi-toast--info .smi-toast__icon--info {
+    display: block;
+    color: #2563eb;
+}
+
+.smi-toast__text {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+}
+
+.smi-toast__close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin: -6px -8px -6px 0;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.smi-toast__close:hover {
+    color: #0f172a;
+    background: rgba(15, 23, 42, 0.06);
+}
+
+.smi-toast__close:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+    .smi-toast {
+        justify-content: flex-end;
+        padding-right: max(24px, env(safe-area-inset-right, 0px));
+        padding-left: max(24px, env(safe-area-inset-left, 0px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .smi-toast {
+        transition-duration: 0.01ms;
+    }
+}
+
+/* Загрузка кнопки отправки */
+
+.smi-success {
+    min-height: 40vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0 48px;
+}
+
+.smi-success__card {
+    text-align: center;
+    max-width: 440px;
+    padding: 40px 36px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(15, 23, 42, 0.1);
+}
+
+.smi-success__icon {
+    margin: 0 auto 20px;
+}
+
+.smi-success__title {
+    margin: 0 0 12px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.02em;
+}
+
+.smi-success__text {
+    margin: 0 0 16px;
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: #374151;
+}
+
+.smi-success__hint {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #6b7280;
+}
+
+#nextStep.btn-loading,
+#stepNav #nextStep.btn-loading {
+    position: relative;
+    opacity: 0.85;
+    pointer-events: none;
+}

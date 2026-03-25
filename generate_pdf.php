@@ -4,573 +4,983 @@ declare(strict_types=1);
 require __DIR__ . '/tfpdf/tfpdf.php';
 require __DIR__ . '/validate_smi_json.php';
 
-$raw = file_get_contents('php://input');
-$rawTrim = is_string($raw) ? trim($raw) : '';
-if ($rawTrim === '') {
-    // Удобно для локальной проверки без HTTP
-    $raw = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'data.js');
-}
-$data = json_decode($raw ?? '', true);
-if (!is_array($data)) {
-    http_response_code(400);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['errors' => ['Некорректный JSON']], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-$validation = validateSmiJson($data);
-if (!$validation['ok']) {
-    http_response_code(400);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['errors' => $validation['errors']], JSON_UNESCAPED_UNICODE);
-}
-
-class PDF extends tFPDF {
-    function CheckPageBreak(float $h): void {
+class PDF extends tFPDF
+{
+    public function CheckPageBreak(float $h): void
+    {
         if ($this->GetY() + $h > $this->PageBreakTrigger) {
             $this->AddPage($this->CurOrientation);
         }
     }
 
-    // Оценка количества строк, которые влезут в ширину при MultiCell
-    function NbLines(float $w, string $txt): int {
-        $txt = (string)$txt;
-        $cw = &$this->CurrentFont['cw'];
+    public function NbLinesUtf8(float $w, string $txt): int
+    {
+        $txt = str_replace(["\r\n", "\r"], "\n", (string)$txt);
+        if ($txt === '') {
+            return 1;
+        }
 
-        if ($w == 0) {
+        if ($w <= 0) {
             $w = $this->w - $this->rMargin - $this->x;
         }
-        $wmax = ($w - 2 * $this->cMargin) * 1000 / $this->FontSize;
 
-        $s = str_replace("\r", '', $txt);
-        $nb = strlen($s);
-        if ($nb > 0 && $s[$nb - 1] === "\n") {
-            $nb--;
-        }
+        $maxWidth = max(1.0, $w - 2 * $this->cMargin);
+        $paragraphs = explode("\n", $txt);
+        $totalLines = 0;
 
-        $sep = -1;
-        $i = 0;
-        $j = 0;
-        $l = 0;
-        $nl = 1;
-
-        while ($i < $nb) {
-            $c = $s[$i];
-
-            if ($c === "\n") {
-                $i++;
-                $sep = -1;
-                $j = $i;
-                $l = 0;
-                $nl++;
+        foreach ($paragraphs as $paragraph) {
+            if ($paragraph === '') {
+                $totalLines++;
                 continue;
             }
 
-            if ($c === ' ') {
-                $sep = $i;
+            $line = '';
+            $lineCount = 1;
+            $tokens = preg_split('/(\s+)/u', $paragraph, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+            if (!is_array($tokens) || $tokens === []) {
+                $tokens = [$paragraph];
             }
 
-            $charCode = ord($c);
-            $charWidth = isset($cw[$charCode]) ? (float)$cw[$charCode] : 500;
-            $l += $charWidth;
-
-            if ($l > $wmax) {
-                if ($sep === -1) {
-                    if ($i === $j) {
-                        $i++;
-                    }
-                } else {
-                    $i = $sep + 1;
+            foreach ($tokens as $token) {
+                $candidate = $line . $token;
+                if ($line === '' || $this->GetStringWidth($candidate) <= $maxWidth) {
+                    $line = $candidate;
+                    continue;
                 }
-                $sep = -1;
-                $j = $i;
-                $l = 0;
-                $nl++;
-            } else {
-                $i++;
+
+                if (trim($line) !== '') {
+                    $lineCount++;
+                }
+                $line = ltrim($token);
+
+                if ($line !== '' && $this->GetStringWidth($line) > $maxWidth) {
+                    $chars = preg_split('//u', $line, -1, PREG_SPLIT_NO_EMPTY);
+                    $line = '';
+                    foreach ($chars as $char) {
+                        $candidateChar = $line . $char;
+                        if ($line === '' || $this->GetStringWidth($candidateChar) <= $maxWidth) {
+                            $line = $candidateChar;
+                            continue;
+                        }
+                        $lineCount++;
+                        $line = $char;
+                    }
+                }
             }
+
+            $totalLines += max(1, $lineCount);
         }
 
-        return $nl;
-    }
-
-    function WriteWrapped(float $h, string $txt, float $w = 0, string $align = 'L', int $border = 0): void {
-        if ($txt === '') {
-            $this->Ln($h);
-            return;
-        }
-
-        $w = $w > 0 ? $w : ($this->w - $this->lMargin - $this->rMargin);
-        $nb = $this->NbLines($w, $txt);
-        $this->CheckPageBreak($nb * $h);
-        $this->MultiCell($w, $h, $txt, $border, $align);
+        return max(1, $totalLines);
     }
 
     /**
-     * Табличная строка в формате "поле / значение" с обводкой и переносом.
+     * @param array<int, array{w:float|string,text:string,align?:string,style?:string}> $cells
      */
-    function Row2Col(string $label, string $value, float $labelWidth = 90.0, float $hLine = 5.0): void {
-        $contentW = $this->w - $this->lMargin - $this->rMargin;
-        $w1 = $labelWidth;
-        $w2 = max(20.0, $contentW - $w1);
+    public function TableRow(array $cells, float $lineHeight = 4.2, string $defaultFont = 'DejaVu', float $fontSize = 9.4): void
+    {
+        $maxLines = 1;
+        foreach ($cells as $cell) {
+            $maxLines = max($maxLines, $this->NbLinesUtf8((float)$cell['w'], (string)($cell['text'] ?? '')));
+        }
 
-        $label = (string)$label;
-        $value = (string)$value;
-
-        $nb1 = $this->NbLines($w1, $label);
-        $nb2 = $this->NbLines($w2, $value);
-        $nb = max($nb1, $nb2, 1);
-        // Делаем небольшой запас высоты, чтобы MultiCell при переносе
-        // из-за несовпадения оценки ширины не выходил за рамку.
-        $h = ($nb + 1) * $hLine;
-
-        $this->CheckPageBreak($h);
+        $rowHeight = max(6.4, $maxLines * $lineHeight + 1.6);
+        $this->CheckPageBreak($rowHeight);
 
         $x = $this->GetX();
         $y = $this->GetY();
+        $currentX = $x;
 
-        $this->Rect($x, $y, $w1, $h);
-        $this->Rect($x + $w1, $y, $w2, $h);
+        foreach ($cells as $cell) {
+            $w = (float)$cell['w'];
+            $text = (string)($cell['text'] ?? '');
+            $align = (string)($cell['align'] ?? 'L');
+            $style = (string)($cell['style'] ?? '');
 
-        $this->SetXY($x, $y);
-        $this->MultiCell($w1, $hLine, $label, 0, 'L');
+            $this->Rect($currentX, $y, $w, $rowHeight);
+            $this->SetXY($currentX, $y + 0.8);
+            $this->SetFont($defaultFont, $style, $fontSize);
+            $this->MultiCell($w, $lineHeight, $text, 0, $align);
+            $currentX += $w;
+            $this->SetXY($currentX, $y);
+        }
 
-        $this->SetXY($x + $w1, $y);
-        $this->MultiCell($w2, $hLine, $value, 0, 'L');
+        $this->SetXY($x, $y + $rowHeight);
+    }
+}
 
-        $this->SetXY($x, $y + $h);
+class SmiPdfGenerator
+{
+    private const PAGE_WIDTH = 190.0;
+    private const LABEL_W = 127.0;
+    private const VALUE_W = 63.0;
+    private const YES_W = 31.5;
+    private const NO_W = 31.5;
+    private const SIDE_TITLE_W = 63.0;
+    private const SIDE_COL1_W = 63.0;
+    private const SIDE_COL2_W = 37.0;
+    private const SIDE_COL3_W = 27.0;
+    private const SMALL_COL_W = 63.3333;
+
+    private $uploadsBasePath;
+    private $currentBaseName = '';
+
+    public function __construct(?string $uploadsBasePath = null)
+    {
+        $this->uploadsBasePath = $uploadsBasePath ?: 'uploads/files/form';
     }
 
     /**
-     * Простая таблица с N колонками и обводкой каждой ячейки.
-     * $rowHeightBase — базовая высота строки на 1 "виртуальную" строку (перенос).
+     * @param string|array<mixed> $payload
      */
-    function DrawTable(array $rows, array $widths, float $rowHeightBase = 4.5): void {
-        $this->SetFont('DejaVu', '', 10);
+    public function generate($payload): string
+    {
+        $data = $this->normalizeData($payload);
+        $validation = validateSmiJson($data);
+        if (!$validation['ok']) {
+            throw new InvalidArgumentException(implode('; ', $validation['errors']));
+        }
+
+        $this->currentBaseName = $this->buildDocumentBaseName($data);
+
+        $pdf = new PDF('P', 'mm', 'A4');
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->AddFont('DejaVu', '', 'DejaVuSansCondensed.ttf', true);
+        $pdf->AddFont('DejaVu', 'B', 'DejaVuSansCondensed-Bold.ttf', true);
+        $pdf->AddPage();
+
+        $this->renderHeader($pdf);
+        $this->renderFoundersSection($pdf, $data);
+        $this->renderNetworkOwnerSection($pdf, $data);
+        $this->renderFoundersContactsAndIndividuals($pdf, $data);
+        $this->renderMainInfoRows($pdf, $data);
+        $this->renderOfficeSection($pdf, $data);
+        $this->renderSpecializationAndDistribution($pdf, $data);
+        $this->renderFinancingSection($pdf, $data);
+        $this->renderTailSection($pdf, $data);
+
+        return $this->saveResult($pdf, $data);
+    }
+
+    private function renderHeader(PDF $pdf): void
+    {
+        $pdf->SetFont('DejaVu', 'B', 13.2);
+        $pdf->MultiCell(self::PAGE_WIDTH, 6.4, 'Министерство информации Республики Беларусь', 0, 'L');
+        $pdf->Ln(1.2);
+
+        $pdf->SetFont('DejaVu', 'B', 11.0);
+        $pdf->MultiCell(
+            self::PAGE_WIDTH,
+            5.4,
+            'ЗАЯВЛЕНИЕ о государственной регистрации (перерегистрации) средства массовой информации',
+            0,
+            'L'
+        );
+        $pdf->Ln(2.0);
+
+        $pdf->SetFont('DejaVu', 'B', 10.4);
+        $pdf->MultiCell(
+            self::PAGE_WIDTH,
+            5.2,
+            'Прошу (просим) произвести государственную регистрацию (перерегистрацию) средства массовой информации:',
+            0,
+            'L'
+        );
+        $pdf->Ln(1.2);
+        $pdf->SetFont('DejaVu', 'B', 10.6);
+        $pdf->MultiCell(self::PAGE_WIDTH, 5.2, $this->currentBaseName, 0, 'L');
+        $pdf->Ln(2.0);
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function renderFoundersSection(PDF $pdf, array $data): void
+    {
+        [$legalFounders, ] = $this->splitFounders($data);
+
+        $this->fullWidthHeader($pdf, '1. Учредитель (учредители) средства массовой информации');
+        $this->yesNoListRow($pdf, 'Государственный орган (организация)', $this->stateFlags($legalFounders));
+        $this->pairRow($pdf, '1.1. Полное наименование юридического лица (юридических лиц)', $this->stackTopLevel($legalFounders, 'name'));
+        $this->pairRow($pdf, '1.1.1. Резидент какой страны', $this->stackTopLevel($legalFounders, 'country'));
+        $this->pairRow($pdf, '1.1.1-1. Доля иностранного участия в уставном фонде', $this->stackTopLevelPercent($legalFounders, 'capitalPercent'));
+
+        $nestedRows = $this->flattenNestedRowsFromParents($legalFounders, 'founders');
+        $this->sideTitleTable(
+            $pdf,
+            'Учредители юридических лиц',
+            'ФИО (наименование юр. лица)',
+            'Гражданство (резидент какой страны)',
+            'Доля в уставном фонде %',
+            $nestedRows
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function renderNetworkOwnerSection(PDF $pdf, array $data): void
+    {
+        $domainOwner = is_array($data['domainOwner'] ?? null) ? $data['domainOwner'] : [];
+        $isLegal = $this->isLegalItem($domainOwner);
+        $hasDomainOwner = $domainOwner !== [];
+
+        $this->fullWidthHeader($pdf, '1-1. Владелец сетевого издания');
+
+        $this->pairRow($pdf, '1-1.1. Полное наименование юридического лица', $hasDomainOwner && $isLegal ? $this->displayName($domainOwner) : '');
+        $this->pairRow($pdf, '1-1.1.1. Резидент какой страны', $hasDomainOwner && $isLegal ? $this->value($domainOwner['country'] ?? '') : '');
+        $this->pairRow($pdf, '1-1.1.2. Доля иностранного участия в уставном фонде', $hasDomainOwner && $isLegal ? $this->percent($domainOwner['capitalPercent'] ?? null) : '');
+        $this->pairRow($pdf, '1-1.1.3. Адрес (почтовый индекс, область, район, город, населенный пункт, улица (проспект, переулок и т.д.), номер дома, корпус, квартира (офис)', $hasDomainOwner && $isLegal ? $this->value($domainOwner['address'] ?? '') : '');
+        $this->contactBlock($pdf, '1-1.1.4. Контактный телефон', $hasDomainOwner && $isLegal ? [$domainOwner] : []);
+        $this->emailRow($pdf, $hasDomainOwner && $isLegal ? [$domainOwner] : []);
+
+        $this->pairRow($pdf, '1-1.2. Фамилия, собственное имя, отчество (если таковое имеется) гражданина', $hasDomainOwner && !$isLegal ? $this->displayName($domainOwner) : '');
+        $this->pairRow($pdf, '1-1.2.1. Гражданство', $hasDomainOwner && !$isLegal ? $this->value($domainOwner['citizenship'] ?? $domainOwner['country'] ?? '') : '');
+        $this->pairRow($pdf, '1-1.2.2. Адрес (почтовый индекс, область, район, город, населенный пункт, улица (проспект, переулок и т.д.), номер дома, корпус, квартира (офис)', $hasDomainOwner && !$isLegal ? $this->value($domainOwner['address'] ?? '') : '');
+        $this->contactBlock($pdf, '1-1.2.3. Контактный телефон', $hasDomainOwner && !$isLegal ? [$domainOwner] : []);
+        $this->emailRow($pdf, $hasDomainOwner && !$isLegal ? [$domainOwner] : []);
+
+        $this->pairRow($pdf, '1-2. Доменное имя сетевого издания', $this->value($domainOwner['domainName'] ?? ''));
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function renderFoundersContactsAndIndividuals(PDF $pdf, array $data): void
+    {
+        [$legalFounders, $physicalFounders] = $this->splitFounders($data);
+
+        $this->pairRow($pdf, '1.1.2. Адрес (почтовый индекс, область, район, город, населенный пункт, улица (проспект, переулок и т.д.), номер дома, корпус, квартира (офис)', $this->stackTopLevel($legalFounders, 'address'));
+        $this->contactBlock($pdf, '1.1.3. Контактный телефон', $legalFounders);
+        $this->emailRow($pdf, $legalFounders);
+
+        $this->pairRow($pdf, '1.2. Фамилия, собственное имя, отчество(если таковое имеется) гражданина (граждан)', $this->stackTopLevel($physicalFounders, 'fullName'));
+        $this->pairRow($pdf, '1.2.1. Гражданство', $this->stackTopLevel($physicalFounders, 'citizenship'));
+        $this->yesNoListRow($pdf, '1.2.2. Отбываю наказание по приговору суда', $this->boolFlags($physicalFounders, 'isServingSentence'));
+        $this->yesNoListRow($pdf, '1.2.3. Признан решением суда недееспособным', $this->boolFlags($physicalFounders, 'isIncapacitated'));
+        $this->yesNoListRow($pdf, '1.2.4. Лишен в установленном порядке права заниматься деятельностью, связанной с производством и выпуском средств массовой информации', $this->boolFlags($physicalFounders, 'isDeprivedOfMediaRights'));
+        $this->yesNoListRow($pdf, '1.2.5. На момент государственной регистрации средства массовой информации не прошло трех лет со дня вступления в силу решения суда о прекращении выпуска средства массовой информации, учредителем которого являлся', $this->boolFlags($physicalFounders, 'isMediaTerminated'));
+        $this->pairRow($pdf, '1.2.6. Адрес (почтовый индекс, область, район, город, населенный пункт, улица (проспект, переулок и т.д.), номер дома, корпус, квартира (офис)', $this->stackTopLevel($physicalFounders, 'address'));
+        $this->contactBlock($pdf, '1.2.7. Контактный телефон', $physicalFounders);
+        $this->emailRow($pdf, $physicalFounders);
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function renderMainInfoRows(PDF $pdf, array $data): void
+    {
+        $main = is_array($data['mainInfo'] ?? null) ? $data['mainInfo'] : [];
+        $this->pairRow($pdf, '2. Название средства массовой информации', $this->value($main['name'] ?? ''));
+        $this->pairRow($pdf, '3. Вид средства массовой информации', $this->mediaKind($main));
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function renderOfficeSection(PDF $pdf, array $data): void
+    {
+        $office = is_array($data['office'] ?? null) ? $data['office'] : [];
+        $owners = is_array($office['owners'] ?? null) ? array_values($office['owners']) : [];
+        [$legalOwners, $physicalOwners] = $this->splitMixedItems($owners);
+
+        $this->fullWidthHeader($pdf, '4. Юридическое лицо, на которое возложены функции редакции средства массовой информации');
+        $this->pairRow($pdf, '4.1. Полное наименование юридического лица', $this->value($office['fullName'] ?? ''));
+        $this->fullWidthHeader($pdf, '4.2. Сведения о собственниках имущества (учредителях, участниках) юридического лица, на которое возложены функции редакции средства массовой информации', 9.0);
+
+        $this->yesNoListRow($pdf, 'Государственный орган (организация)', $this->stateFlags($legalOwners));
+        $this->pairRow($pdf, '4.2.1. Полное наименование юридического лица (юридических лиц)', $this->stackTopLevel($legalOwners, 'name'));
+        $this->pairRow($pdf, '4.2.1.1. Резидент какой страны', $this->stackTopLevel($legalOwners, 'country'));
+        $this->pairRow($pdf, '4.2.1.2. Доля в уставном фонде', $this->stackTopLevelPercent($legalOwners, 'capitalPercent'));
+
+        $nestedRows = $this->flattenNestedRowsFromParents($legalOwners, 'owners');
+        $this->sideTitleTable(
+            $pdf,
+            'Учредители юридических лиц',
+            'ФИО (наименование юр. лица)',
+            'Гражданство (резидент какой страны)',
+            'Доля в уставном фонде %',
+            $nestedRows
+        );
+
+        $this->pairRow($pdf, '4.2.2. Фамилия имя отчество гражданина (граждан)', $this->stackTopLevel($physicalOwners, 'name'));
+        $this->pairRow($pdf, '4.2.2.1. Гражданство', $this->stackTopLevel($physicalOwners, 'country'));
+        $this->pairRow($pdf, '4.2.2.2. Доля в уставном фонде', $this->stackTopLevelPercent($physicalOwners, 'capitalPercent'));
+
+        $chief = is_array($office['chiefEditor'] ?? null) ? $office['chiefEditor'] : [];
+        $this->pairRow($pdf, '4.3. Фамилия, собственное имя, отчество (если таковое имеется) главного редактора (редактора) средства массовой информации', $this->value($chief['name'] ?? ''));
+        $this->pairRow($pdf, '4.3.1. Данные акта, на основании которого принято решение о назначении на должность главного редактора (редактора)', $this->value($chief['actAssignment'] ?? ''));
+        $this->yesNoSingleRow($pdf, '4.3.2. Главный редактор (редактор) средства массовой информации соответствует квалификационным требованиям, установленным законодательством Республики Беларусь', $this->nullableBool($chief['meetRequirements'] ?? null));
+        $this->pairRow($pdf, '4.3.3. Учебное заведение, которое окончил главный редактор (редактор), год поступления(окончания)', $this->value($chief['institution'] ?? ''));
+        $this->pairRow($pdf, '4.3.4. Сведения о работе главного редактора (редактора) на руководящих должностях (место работы, должность, период работы)', $this->value($chief['formerJobInfo'] ?? ''));
+        $this->pairRow($pdf, '4.3.5 Гражданство', $this->value($chief['country'] ?? ''));
+
+        $this->pairRow($pdf, '4.4. Адрес юридического лица, на которое возложены функции редакции средства массовой информации (почтовый индекс, область, район, город, населенный пункт, улица (проспект, переулок и т.д.), номер дома, корпус, квартира (офис)', $this->value($office['address'] ?? ''));
+        $this->contactBlock($pdf, '4.4.1. Контактный телефон', [$office]);
+        $this->emailRow($pdf, [$office]);
+        $this->pairRow($pdf, '4.4.2. Адрес веб-сайта', $this->value($office['www'] ?? ''));
+        $this->yesNoSingleRow($pdf, '4.4.3. Помещение, в котором размещается юридическое лицо, на которое возложены функции средства массовой информации, соответствует требованиям законодательства', $this->nullableBool($office['meetsLegalRqmts'] ?? null));
+        $this->pairRow($pdf, '4.4.4. Юридическое лицо, на которое возложены функции редакции средства массовой информации, находиться в жилом помещении, нежилом помещении, в помещении, которое переведено из жилого в нежилое', $this->value($office['room'] ?? ''));
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function renderSpecializationAndDistribution(PDF $pdf, array $data): void
+    {
+        $main = is_array($data['mainInfo'] ?? null) ? $data['mainInfo'] : [];
+        $this->pairRow($pdf, '5. Специализация(тематика) средства массовой информации', $this->specializationLine($main));
+
+        $periodicityValue = $this->value($main['periodicity'] ?? '');
+        $volume = $this->value($main['volumeVoice'] ?? '');
+        $row6Value = $periodicityValue;
+        if ($volume !== '') {
+            $row6Value = $row6Value !== '' ? $row6Value . ', ' . $volume : $volume;
+        }
+        $this->pairRow($pdf, '6. Периодичность средства массовой информации (за исключением сетевого издания). Максимальный объем вещания (для телевизионного и радиовещательного средства массовой информации)', $row6Value);
+        $this->pairRow($pdf, '6-1. Объем телепередач, аудиовизуальных произведений, иных сообщений и (или) материалов белорусского (национального) производства в ежемесячном объеме вещания телевизионных средств массовой информации (для телевизионного средства массовой информации)', $this->percent($main['bynVolume'] ?? null));
+        $this->pairRow($pdf, '7. Язык средства массовой информации', $this->languageLine($main));
+        $this->pairRow($pdf, '8. Предполагаемая территория распространения средства массовой информации', $this->distributionLine($main));
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function renderFinancingSection(PDF $pdf, array $data): void
+    {
+        $this->yesNoSingleRow($pdf, '9. Финансирование средства массовой информации соответствует требованиям законодательства', $this->nullableBool($data['financingMeetsLegalRqmts'] ?? null));
+        $this->fullWidthHeader($pdf, '9.1. Источники финансирования средства массовой информации', 9.0);
+
+        $sponsors = is_array($data['sponsors'] ?? null) ? array_values($data['sponsors']) : [];
+        [$legalSponsors, $physicalSponsors] = $this->splitMixedItems($sponsors);
+
+        $this->fullWidthHeader($pdf, '9.1.1. Поступающие от юридических лиц', 9.0);
+        $this->pairRow($pdf, '9.1.1.1 Полное наименование юридического лица (юридических лиц)', $this->stackTopLevel($legalSponsors, 'name'));
+        $this->pairRow($pdf, '9.1.1.2 Резидент какой страны', $this->stackTopLevel($legalSponsors, 'country'));
+        $this->pairRow($pdf, '9.1.1.3 Доля в уставном фонде юридического лица, на которое возложены функции редакции средства массовой информации', $this->stackTopLevelPercent($legalSponsors, 'shareInCapital'));
+        $this->pairRow($pdf, '9.1.1.4 Форма участия в финансировании (посредством участия в уставном фонде юридического лица, на которое возложены функции редакции средства массовой информации, другая форма)', $this->stackTopLevel($legalSponsors, 'participationForm'));
+
+        $this->fullWidthHeader($pdf, '9.1.2 Поступающие от физических лиц, в том числе иностранных граждан и лиц без гражданства', 9.0);
+        $this->pairRow($pdf, '9.1.2.1. Фамилия, собственное имя, отчество (если таковое имеется) гражданина (граждан), лица без гражданства (лиц без гражданства)', $this->stackTopLevel($physicalSponsors, 'name'));
+        $this->pairRow($pdf, '9.1.2.2. Гражданство', $this->stackTopLevel($physicalSponsors, 'country'));
+        $this->pairRow($pdf, '9.1.2.3. Место постоянного проживания', $this->stackTopLevel($physicalSponsors, 'address'));
+        $this->pairRow($pdf, '9.1.2.4. Доля в уставном фонде юридического лица на которое возложены функции редакции средства массовой информации', $this->stackTopLevelPercent($physicalSponsors, 'shareInCapital'));
+        $this->pairRow($pdf, '9.1.2.5 Форма участия в финансировании (посредством участия в уставном фонде юридического лица, на которое возложены функции редакции средства массовой информации, другая форма)', $this->stackTopLevel($physicalSponsors, 'participationForm'));
+        $this->pairRow($pdf, '9.1.3. Другие источники', $this->value($data['otherSources'] ?? ''));
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function renderTailSection(PDF $pdf, array $data): void
+    {
+        $main = is_array($data['mainInfo'] ?? null) ? $data['mainInfo'] : [];
+        $this->pairRow($pdf, '10. Предполагаемый тираж средства массовой информации (для печатного средства массовой информации)', $this->value($main['circulation'] ?? ''));
+
+        $answer = $this->value($data['information'] ?? '');
+        if ($answer === '' && array_key_exists('confirm', $data)) {
+            $answer = $this->lowerYesNo($this->nullableBool($data['confirm']));
+        }
+        $this->pairRow(
+            $pdf,
+            '11. Сведения о том, является ли учредитель (учредители) средства массовой информации учредителем, главным редактором (редактором) или журналистом других средств массовой информации (для учредителя средства массовой информации - физического лица), распространителем продукции средства массовой информации',
+            $answer
+        );
+    }
+
+    private function fullWidthHeader(PDF $pdf, string $text, float $fontSize = 10.0): void
+    {
+        $pdf->TableRow([
+            ['w' => self::PAGE_WIDTH, 'text' => $text, 'style' => 'B'],
+        ], 4.4, 'DejaVu', $fontSize);
+    }
+
+    private function pairRow(PDF $pdf, string $label, string $value): void
+    {
+        $pdf->TableRow([
+            ['w' => self::LABEL_W, 'text' => $label],
+            ['w' => self::VALUE_W, 'text' => $value],
+        ]);
+    }
+
+    private function yesNoSingleRow(PDF $pdf, string $label, ?bool $value): void
+    {
+        [$yesText, $noText] = $this->radioColumns($value, null);
+        $pdf->TableRow([
+            ['w' => self::LABEL_W, 'text' => $label],
+            ['w' => self::YES_W, 'text' => $yesText],
+            ['w' => self::NO_W, 'text' => $noText],
+        ]);
+    }
+
+    /**
+     * @param array<int, bool|null> $flags
+     */
+    private function yesNoListRow(PDF $pdf, string $label, array $flags): void
+    {
+        if ($flags === []) {
+            $this->yesNoSingleRow($pdf, $label, null);
+            return;
+        }
+
+        $yesLines = [];
+        $noLines = [];
+        foreach ($flags as $i => $flag) {
+            [$yesText, $noText] = $this->radioColumns($flag, $i + 1);
+            $yesLines[] = $yesText;
+            $noLines[] = $noText;
+        }
+
+        $pdf->TableRow([
+            ['w' => self::LABEL_W, 'text' => $label],
+            ['w' => self::YES_W, 'text' => implode("\n", $yesLines)],
+            ['w' => self::NO_W, 'text' => implode("\n", $noLines)],
+        ]);
+    }
+
+    /**
+     * @param array<int, array<string,mixed>> $items
+     */
+    private function contactBlock(PDF $pdf, string $label, array $items): void
+    {
+        $this->fullWidthHeader($pdf, $label, 9.4);
+
+        $codes = [];
+        $phones = [];
+        $faxes = [];
+
+        foreach ($items as $i => $item) {
+            $codes[] = ($i + 1) . '. Код ' . $this->value($item['phoneCode'] ?? '');
+            $phones[] = 'Телефон ' . $this->value($item['phone'] ?? '');
+            $faxes[] = 'Факс ' . $this->value($item['fax'] ?? '');
+        }
+
+        $pdf->TableRow([
+            ['w' => self::SMALL_COL_W, 'text' => implode("\n", $codes)],
+            ['w' => self::SMALL_COL_W, 'text' => implode("\n", $phones)],
+            ['w' => self::SMALL_COL_W, 'text' => implode("\n", $faxes)],
+        ]);
+    }
+
+    /**
+     * @param array<int, array<string,mixed>> $items
+     */
+    private function emailRow(PDF $pdf, array $items): void
+    {
+        $emails = [];
+        foreach ($items as $i => $item) {
+            $email = $this->value($item['email'] ?? '');
+            $emails[] = ($i + 1) . '. ' . $email;
+        }
+        $this->pairRow($pdf, 'Адрес электронной почты', implode("\n", $emails));
+    }
+
+    /**
+     * @param array<int, array{num:string,name:string,country:string,share:string}> $rows
+     */
+    private function sideTitleTable(PDF $pdf, string $sideTitle, string $header1, string $header2, string $header3, array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+
+        $remaining = $rows;
+        $lineHeight = 4.1;
+        $headerCells = [
+            ['w' => self::SIDE_COL1_W, 'text' => $header1],
+            ['w' => self::SIDE_COL2_W, 'text' => $header2],
+            ['w' => self::SIDE_COL3_W, 'text' => $header3],
+        ];
+        $headerHeight = $this->rowHeight($pdf, $headerCells, $lineHeight);
+
+        while ($remaining !== []) {
+            $segment = [];
+            $segmentHeight = $headerHeight;
+            $available = $pdf->PageBreakTrigger - $pdf->GetY();
+
+            foreach ($remaining as $idx => $row) {
+                $rowCells = [
+                    ['w' => self::SIDE_COL1_W, 'text' => $row['num'] . ' ' . $row['name']],
+                    ['w' => self::SIDE_COL2_W, 'text' => $row['country']],
+                    ['w' => self::SIDE_COL3_W, 'text' => $row['share']],
+                ];
+                $rowHeight = $this->rowHeight($pdf, $rowCells, $lineHeight);
+
+                if ($segment === []) {
+                    if ($segmentHeight + $rowHeight > $available && $available < 40) {
+                        $pdf->AddPage($pdf->CurOrientation);
+                        $available = $pdf->PageBreakTrigger - $pdf->GetY();
+                    }
+                }
+
+                if ($segment !== [] && $segmentHeight + $rowHeight > $available) {
+                    break;
+                }
+
+                $segment[] = $row;
+                $segmentHeight += $rowHeight;
+                unset($remaining[$idx]);
+            }
+
+            $remaining = array_values($remaining);
+            $this->drawSideTitleTableSegment($pdf, $sideTitle, $headerCells, $segment, $lineHeight, $segmentHeight);
+        }
+    }
+
+    /**
+     * @param array<int, array{w:float|string,text:string}> $headerCells
+     * @param array<int, array{num:string,name:string,country:string,share:string}> $rows
+     */
+    private function drawSideTitleTableSegment(PDF $pdf, string $sideTitle, array $headerCells, array $rows, float $lineHeight, float $totalHeight): void
+    {
+        $pdf->CheckPageBreak($totalHeight);
+        $x = $pdf->GetX();
+        $y = $pdf->GetY();
+
+        $pdf->Rect($x, $y, self::SIDE_TITLE_W, $totalHeight);
+        $pdf->SetXY($x, $y + 0.8);
+        $pdf->SetFont('DejaVu', '', 9.4);
+        $pdf->MultiCell(self::SIDE_TITLE_W, $lineHeight, $sideTitle, 0, 'L');
+
+        $rightX = $x + self::SIDE_TITLE_W;
+        $currentY = $y;
+
+        $pdf->SetXY($rightX, $currentY);
+        $pdf->TableRow([
+            ['w' => self::SIDE_COL1_W, 'text' => $headerCells[0]['text']],
+            ['w' => self::SIDE_COL2_W, 'text' => $headerCells[1]['text']],
+            ['w' => self::SIDE_COL3_W, 'text' => $headerCells[2]['text']],
+        ], $lineHeight);
+        $currentY = $pdf->GetY();
+
         foreach ($rows as $row) {
-            $nb = 1;
-            $rowCount = count($row);
-            for ($i = 0; $i < $rowCount; $i++) {
-                $cellValue = is_scalar($row[$i]) ? (string)$row[$i] : '';
-                $nb = max($nb, $this->NbLines((float)$widths[$i], $cellValue));
-            }
-
-            $h = ($nb + 1) * $rowHeightBase;
-            $this->CheckPageBreak($h);
-
-            $x = $this->GetX();
-            $y = $this->GetY();
-
-            $currX = $x;
-            for ($i = 0; $i < $rowCount; $i++) {
-                $w = (float)$widths[$i];
-                $this->Rect($currX, $y, $w, $h);
-                $this->SetXY($currX, $y);
-                $cellValue = is_scalar($row[$i]) ? (string)$row[$i] : '';
-                $this->MultiCell($w, $rowHeightBase, $cellValue, 0, 'L');
-                $currX += $w;
-                $this->SetXY($currX, $y);
-            }
-
-            $this->SetXY($x, $y + $h);
+            $pdf->SetXY($rightX, $currentY);
+            $pdf->TableRow([
+                ['w' => self::SIDE_COL1_W, 'text' => $row['num'] . ' ' . $row['name']],
+                ['w' => self::SIDE_COL2_W, 'text' => $row['country']],
+                ['w' => self::SIDE_COL3_W, 'text' => $row['share']],
+            ], $lineHeight);
+            $currentY = $pdf->GetY();
         }
+
+        $pdf->SetXY($x, $y + $totalHeight);
     }
-}
 
-function yn(mixed $v): string {
-    return $v ? 'Да' : 'Нет';
-}
-
-function s(mixed $v, string $default = '-'): string {
-    if ($v === null) return $default;
-    if (is_string($v)) {
-        $t = trim($v);
-        return $t !== '' ? $t : $default;
+    /**
+     * @param array<int, array{w:float|string,text:string}> $cells
+     */
+    private function rowHeight(PDF $pdf, array $cells, float $lineHeight): float
+    {
+        $maxLines = 1;
+        foreach ($cells as $cell) {
+            $maxLines = max($maxLines, $pdf->NbLinesUtf8((float)$cell['w'], (string)$cell['text']));
+        }
+        return max(6.4, $maxLines * $lineHeight + 1.6);
     }
-    if (is_bool($v)) return $v ? 'Да' : 'Нет';
-    if (is_numeric($v)) return (string)$v;
-    return $default;
-}
 
-function ind(int $level): string {
-    return str_repeat('  ', max(0, $level));
-}
-
-function isJurByTypeFace(array $x): bool {
-    return ($x['typeFace'] ?? '') === 'jurFace';
-}
-
-function isFizByTypeFace(array $x): bool {
-    return ($x['typeFace'] ?? '') === 'fizFace';
-}
-
-/**
- * Вложенные учредители юридических лиц (jurFace) и физлиц (fizFace) в виде таблиц.
- * В образцах вложенные юр. лица обычно выводятся списком: ФИО/название / страна / доля.
- */
-function flattenByType(array $items, string $prefix, string $childrenKey, bool $wantJur): array {
-    $rows = [];
-
-    foreach ($items as $i => $it) {
-        $idx = $i + 1;
-        $p = $prefix . $idx . '.';
-
-        $typeFace = (string)($it['typeFace'] ?? '');
-        $isJur = $typeFace === 'jurFace';
-        $isFiz = $typeFace === 'fizFace';
-
-        if ($wantJur && $isJur) {
-            $name = s($it['name'] ?? $it['fullName'] ?? '', '');
-            $country = s($it['country'] ?? $it['citizenship'] ?? '', '');
-            $percent = (isset($it['capitalPercent']) && $it['capitalPercent'] !== '') ? ((string)$it['capitalPercent'] . '%') : '-';
-            $rows[] = [rtrim($p, '.').' '.$name, $country, $percent];
+    /**
+     * @return array{0:string,1:string}
+     */
+    private function radioColumns(?bool $value, ?int $index): array
+    {
+        if ($value === null) {
+            return ['', ''];
         }
 
-        if (!$wantJur && $isFiz) {
-            $name = s($it['name'] ?? $it['fullName'] ?? '', '');
-            $country = s($it['country'] ?? $it['citizenship'] ?? '', '');
-            $percent = (isset($it['capitalPercent']) && $it['capitalPercent'] !== '') ? ((string)$it['capitalPercent'] . '%') : '-';
-            $rows[] = [rtrim($p, '.').' '.$name, $country, $percent];
+        $prefix = $index !== null ? $index . '. ' : '';
+        $yes = $value ? '◉ Да' : '○ Да';
+        $no = $value ? '○ Нет' : '◉ Нет';
+
+        return [$prefix . $yes, $no];
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array{0:array<int,array<string,mixed>>,1:array<int,array<string,mixed>>}
+     */
+    private function splitFounders(array $data): array
+    {
+        $items = [];
+        if (is_array($data['founders'] ?? null)) {
+            $items = array_merge($items, array_values($data['founders']));
+        }
+        if (is_array($data['founders_phys'] ?? null)) {
+            $items = array_merge($items, array_values($data['founders_phys']));
         }
 
-        // Рекурсивно продолжаем искать вложенных по тому же childrenKey (founders/owners)
-        if (!$isFiz) {
-            $nested = $it[$childrenKey] ?? [];
-            if (is_array($nested) && count($nested) > 0) {
-                $rows = array_merge($rows, flattenByType($nested, $p, $childrenKey, $wantJur));
+        return $this->splitMixedItems($items);
+    }
+
+    /**
+     * @param array<int, mixed> $items
+     * @return array{0:array<int,array<string,mixed>>,1:array<int,array<string,mixed>>}
+     */
+    private function splitMixedItems(array $items): array
+    {
+        $legal = [];
+        $physical = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            if ($this->isLegalItem($item)) {
+                $legal[] = $item;
+            } else {
+                $physical[] = $item;
             }
         }
+        return [$legal, $physical];
     }
 
-    return $rows;
-}
-
-function drawNestedTables(PDF $pdf, array $nestedItems, string $prefix, int $level, string $childrenKey): void {
-    if (!$nestedItems) return;
-
-    $jurRows = flattenByType($nestedItems, $prefix, $childrenKey, true);
-    $fizRows = flattenByType($nestedItems, $prefix, $childrenKey, false);
-
-    if ($jurRows) {
-        $pdf->SetFont('DejaVu', '', 10);
-        $pdf->WriteWrapped(5, ind($level) . 'Учредители юридических лиц:');
-        // Ширины под A4: можно подгонять, но сначала фиксируем как в примерах примерно
-        $pdf->DrawTable($jurRows, [85, 55, 30], 4.2);
-        $pdf->Ln(1);
+    /**
+     * @param array<string,mixed> $item
+     */
+    private function isLegalItem(array $item): bool
+    {
+        $typeFace = (string)($item['typeFace'] ?? '');
+        if ($typeFace === 'jurFace') {
+            return true;
+        }
+        if ($typeFace === 'fizFace') {
+            return false;
+        }
+        return array_key_exists('capitalPercent', $item) || array_key_exists('isState', $item) || array_key_exists('founders', $item) || array_key_exists('owners', $item);
     }
 
-    if ($fizRows) {
-        $pdf->SetFont('DejaVu', '', 10);
-        $pdf->WriteWrapped(5, ind($level) . 'Фамилия, имя, отчество гражданина (граждан):');
-        $pdf->DrawTable($fizRows, [85, 55, 30], 4.2);
-        $pdf->Ln(1);
+    /**
+     * @param array<int, array<string,mixed>> $items
+     * @return array<int, bool|null>
+     */
+    private function stateFlags(array $items): array
+    {
+        $result = [];
+        foreach ($items as $item) {
+            $result[] = $this->nullableBool($item['isState'] ?? null);
+        }
+        return $result;
     }
-}
 
-/**
- * Рекурсивный вывод учредителей (founders[]).
- * Для юр. лиц вложенные учредители лежат в key='founders'.
- */
-function renderFounders(PDF $pdf, array $items, string $prefix, int $level, string $childrenKey = 'founders'): void {
-    foreach ($items as $i => $f) {
-        $idx = $i + 1;
-        $p = $prefix . $idx . '.';
+    /**
+     * @param array<int, array<string,mixed>> $items
+     * @return array<int, bool|null>
+     */
+    private function boolFlags(array $items, string $field): array
+    {
+        $result = [];
+        foreach ($items as $item) {
+            $result[] = $this->nullableBool($item[$field] ?? null);
+        }
+        return $result;
+    }
 
-        $typeFace = (string)($f['typeFace'] ?? '');
-        $isJur = $typeFace === 'jurFace' || array_key_exists('capitalPercent', $f) || array_key_exists('isState', $f);
+    /**
+     * @param array<int, array<string,mixed>> $items
+     */
+    private function stackTopLevel(array $items, string $field): string
+    {
+        $lines = [];
+        foreach ($items as $i => $item) {
+            $value = $this->fieldValue($item, $field);
+            if ($value === '') {
+                continue;
+            }
+            $lines[] = ($i + 1) . '. ' . $value;
+        }
+        return implode("\n", $lines);
+    }
 
-        if ($isJur) {
-            $isState = !empty($f['isState']);
-            $pdf->SetFont('DejaVu', '', 10);
-            $pdf->Row2Col(ind($level) . $p . 'Государственный орган (организация)', yn($isState));
-            $pdf->Row2Col(ind($level) . $p . 'Полное наименование (юр. лицо)', s($f['name'] ?? $f['fullName'] ?? ''));
-            $pdf->Row2Col(ind($level) . $p . 'Резидент какой страны', s($f['country'] ?? $f['citizenship'] ?? ''));
+    /**
+     * @param array<int, array<string,mixed>> $items
+     */
+    private function stackTopLevelPercent(array $items, string $field): string
+    {
+        $lines = [];
+        foreach ($items as $i => $item) {
+            $value = $this->percent($item[$field] ?? null);
+            if ($value === '') {
+                continue;
+            }
+            $lines[] = ($i + 1) . '. ' . $value;
+        }
+        return implode("\n", $lines);
+    }
 
-            $capital = $f['capitalPercent'] ?? '';
-            $pdf->Row2Col(
-                ind($level) . $p . 'Доля иностранного участия в уставном фонде',
-                $capital !== '' ? $capital . '%' : '-'
-            );
+    /**
+     * @param array<string,mixed> $item
+     */
+    private function fieldValue(array $item, string $field): string
+    {
+        if ($field === 'name') {
+            return $this->displayName($item);
+        }
+        return $this->value($item[$field] ?? '');
+    }
 
-            $pdf->Row2Col(ind($level) . $p . 'Адрес', s($f['address'] ?? ''));
+    /**
+     * @param array<string,mixed> $item
+     */
+    private function displayName(array $item): string
+    {
+        return $this->value($item['name'] ?? $item['fullName'] ?? '');
+    }
 
-            $phoneCode = s($f['phoneCode'] ?? '', '');
-            $phone = s($f['phone'] ?? '', '');
-            $fax = s($f['fax'] ?? '', '');
-            $email = s($f['email'] ?? '', '');
-            $contacts = 'код ' . ($phoneCode !== '' ? $phoneCode : '-') .
-                ', телефон ' . ($phone !== '' ? $phone : '-') .
-                ', факс ' . ($fax !== '' ? $fax : '-') .
-                ', e-mail ' . ($email !== '' ? $email : '-');
-            $pdf->Row2Col(ind($level) . $p . 'Контакты', $contacts);
+    /**
+     * @param array<int, array<string,mixed>> $parents
+     * @return array<int, array{num:string,name:string,country:string,share:string}>
+     */
+    private function flattenNestedRowsFromParents(array $parents, string $childrenKey): array
+    {
+        $rows = [];
+        foreach ($parents as $i => $parent) {
+            $children = $parent[$childrenKey] ?? [];
+            if (!is_array($children) || $children === []) {
+                continue;
+            }
+            $prefix = (string)($i + 1) . '.';
+            $rows = array_merge($rows, $this->flattenNestedRows($children, $prefix, $childrenKey));
+        }
+        return $rows;
+    }
 
-            if (!$isState) {
-                $nested = $f[$childrenKey] ?? [];
-                if (is_array($nested) && count($nested) > 0) {
-                    drawNestedTables($pdf, $nested, $p, $level + 1, $childrenKey);
+    /**
+     * @param array<int, array<string,mixed>> $items
+     * @return array<int, array{num:string,name:string,country:string,share:string}>
+     */
+    private function flattenNestedRows(array $items, string $prefix, string $childrenKey): array
+    {
+        $rows = [];
+        foreach ($items as $i => $item) {
+            $num = $prefix . ($i + 1) . '.';
+            $rows[] = [
+                'num' => rtrim($num, '.'),
+                'name' => $this->displayName($item),
+                'country' => $this->value($item['country'] ?? $item['citizenship'] ?? ''),
+                'share' => $this->value($item['capitalPercent'] ?? ''),
+            ];
+
+            $nested = $item[$childrenKey] ?? [];
+            if (is_array($nested) && $nested !== []) {
+                $rows = array_merge($rows, $this->flattenNestedRows($nested, $num, $childrenKey));
+            }
+        }
+        return $rows;
+    }
+
+    /**
+     * @param array<string,mixed> $main
+     */
+    private function mediaKind(array $main): string
+    {
+        $kind = $this->value($main['kindSmi'] ?? '');
+        if ($kind === 'Другое') {
+            return $this->value($main['kindSmiOther'] ?? '');
+        }
+        return $kind;
+    }
+
+    /**
+     * @param array<string,mixed> $main
+     */
+    private function specializationLine(array $main): string
+    {
+        $parts = [];
+        if (is_array($main['specialization'] ?? null)) {
+            foreach ($main['specialization'] as $value) {
+                $text = $this->value($value);
+                if ($text !== '') {
+                    $parts[] = $text;
                 }
             }
-        } else {
-            $pdf->SetFont('DejaVu', '', 10);
-            $pdf->Row2Col(ind($level) . $p . 'ФИО', s($f['fullName'] ?? $f['name'] ?? ''));
-            $pdf->Row2Col(ind($level) . $p . 'Гражданство', s($f['citizenship'] ?? $f['country'] ?? ''));
-
-            $pdf->Row2Col(ind($level) . $p . 'Адрес', s($f['address'] ?? ''));
-
-            $phoneCode = s($f['phoneCode'] ?? '', '');
-            $phone = s($f['phone'] ?? '', '');
-            $email = s($f['email'] ?? '', '');
-            $contacts = 'код ' . ($phoneCode !== '' ? $phoneCode : '-') .
-                ', телефон ' . ($phone !== '' ? $phone : '-') .
-                ', e-mail ' . ($email !== '' ? $email : '-');
-            $pdf->Row2Col(ind($level) . $p . 'Контакты', $contacts);
-
-            $pdf->Row2Col(ind($level) . $p . 'Отбываю наказание по приговору суда', yn(!empty($f['isServingSentence'])));
-            $pdf->Row2Col(ind($level) . $p . 'Признан решением суда недееспособным', yn(!empty($f['isIncapacitated'])));
-            $pdf->Row2Col(ind($level) . $p . 'Лишен в установленном порядке права заниматься деятельностью', yn(!empty($f['isDeprivedOfMediaRights'])));
-            $pdf->Row2Col(ind($level) . $p . 'На момент гос. регистрации не прошло 3 лет со дня решения суда', yn(!empty($f['isMediaTerminated'])));
         }
+        $other = $this->value($main['specializationOther'] ?? '');
+        if ($other !== '') {
+            $parts[] = $other;
+        }
+        return implode(",\n", $parts);
     }
-}
 
-/**
- * Рекурсивный вывод собственников редакции (office.owners[]).
- * Для юр. лиц вложенные собственники лежат в key='owners'.
- */
-function renderOwners(PDF $pdf, array $items, string $prefix, int $level, string $childrenKey = 'owners'): void {
-    foreach ($items as $i => $o) {
-        $idx = $i + 1;
-        $p = $prefix . $idx . '.';
-
-        $typeFace = (string)($o['typeFace'] ?? '');
-        $isJur = $typeFace === 'jurFace' || array_key_exists('isState', $o);
-
-        if ($isJur) {
-            $isState = !empty($o['isState']);
-            $pdf->Row2Col(ind($level) . $p . 'Государственный орган (организация)', yn($isState));
-            $pdf->Row2Col(ind($level) . $p . 'Наименование (юр. лицо)', s($o['name'] ?? ''));
-            $pdf->Row2Col(ind($level) . $p . 'Резидент какой страны', s($o['country'] ?? ''));
-            $capital = $o['capitalPercent'] ?? '';
-            $pdf->Row2Col(ind($level) . $p . 'Доля в уставном фонде', $capital !== '' ? $capital . '%' : '-');
-
-            if (!$isState) {
-                $nested = $o[$childrenKey] ?? [];
-                if (is_array($nested) && count($nested) > 0) {
-                    drawNestedTables($pdf, $nested, $p, $level + 1, $childrenKey);
+    /**
+     * @param array<string,mixed> $main
+     */
+    private function languageLine(array $main): string
+    {
+        $parts = [];
+        if (is_array($main['language'] ?? null)) {
+            foreach ($main['language'] as $lang) {
+                $text = $this->value($lang);
+                if ($text !== '') {
+                    $parts[] = $text;
                 }
             }
-        } else {
-            $pdf->Row2Col(ind($level) . $p . 'Физ. лицо', s($o['name'] ?? ''));
-            $pdf->Row2Col(ind($level) . $p . 'Резидент какой страны', s($o['country'] ?? ''));
-            $capital = $o['capitalPercent'] ?? '';
-            $pdf->Row2Col(ind($level) . $p . 'Доля в уставном фонде', $capital !== '' ? $capital . '%' : '-');
         }
+
+        $other = $this->value($main['languageOther'] ?? '');
+        $otherText = $this->value($main['languageOtherText'] ?? '');
+        if ($other !== '') {
+            $parts[] = trim(($otherText !== '' ? $otherText . ' ' : '') . $other);
+        }
+
+        return implode(', ', $parts);
+    }
+
+    /**
+     * @param array<string,mixed> $main
+     */
+    private function distributionLine(array $main): string
+    {
+        $territory = $this->value($main['distributionTerritory'] ?? '');
+        $detail = $this->value($main['distributionTerritoryDetail'] ?? '');
+        $detailExtra = $this->value($main['distributionTerritoryDetailExtra'] ?? '');
+
+        $parts = [];
+        if ($territory !== '') {
+            $parts[] = $territory;
+        }
+        if ($detail !== '') {
+            $parts[] = $detail;
+        }
+        if ($detailExtra !== '' && $detailExtra !== $detail) {
+            $parts[] = $detailExtra;
+        }
+        return implode(' ', $parts);
+    }
+
+    private function buildDocumentBaseName(array $data): string
+    {
+        $main = is_array($data['mainInfo'] ?? null) ? $data['mainInfo'] : [];
+        $type = $this->filePart((string)($main['typeSmi'] ?? 'СМИ'));
+        $type = preg_replace('/_?СМИ$/u', '', $type ?? '') ?: 'СМИ';
+        $name = $this->filePart((string)($main['name'] ?? 'Без_названия'));
+        return trim($type . '_' . $name . '_' . date('d_m_Y_H_i_s') . '_' . substr(uniqid('', true), -12), '_');
+    }
+
+    private function saveResult(PDF $pdf, array $data): string
+    {
+        $outDir = $this->uploadsBasePath . DIRECTORY_SEPARATOR . date('Y-m-d_H-i-s') . '_smi';
+        if (!is_dir($outDir)) {
+            @mkdir($outDir, 0755, true);
+        }
+
+        $jsonFile = $outDir . DIRECTORY_SEPARATOR . 'input.json';
+        file_put_contents($jsonFile, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+        $outFile = $outDir . DIRECTORY_SEPARATOR . $this->currentBaseName . '.pdf';
+        $pdf->Output('F', $outFile);
+        return $outFile;
+    }
+
+    /**
+     * @param string|array<mixed> $payload
+     * @return array<string,mixed>
+     */
+    private function normalizeData($payload): array
+    {
+        if (is_array($payload)) {
+            return $payload;
+        }
+        $data = json_decode((string)$payload, true);
+        if (!is_array($data)) {
+            throw new InvalidArgumentException('Некорректный JSON');
+        }
+        return $data;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function nullableBool($value): ?bool
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_numeric($value)) {
+            return ((int)$value) !== 0;
+        }
+        $normalized = mb_strtolower(trim((string)$value));
+        if (in_array($normalized, ['true', '1', 'да', 'yes'], true)) {
+            return true;
+        }
+        if (in_array($normalized, ['false', '0', 'нет', 'no'], true)) {
+            return false;
+        }
+        return null;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function value($value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+        if (is_bool($value)) {
+            return $value ? 'Да' : 'Нет';
+        }
+        if (is_scalar($value)) {
+            return trim((string)$value);
+        }
+        return '';
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function percent($value): string
+    {
+        $text = $this->value($value);
+        if ($text === '') {
+            return '';
+        }
+        return rtrim($text, '%') . '%';
+    }
+
+    private function lowerYesNo(?bool $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+        return $value ? 'да' : 'нет';
+    }
+
+    private function filePart(string $value): string
+    {
+        $value = trim($value);
+        $value = preg_replace('/\s+/u', '_', $value) ?? $value;
+        $value = preg_replace('/[^\pL\pN_\-]+/u', '_', $value) ?? $value;
+        $value = preg_replace('/_+/u', '_', $value) ?? $value;
+        return trim($value, '_');
     }
 }
 
-$pdf = new PDF();
-$pdf->AddPage();
+// HTTP API: POST с JSON в теле — тот же контракт, что saveJsonData() в контроллере
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    try {
+        $raw = file_get_contents('php://input');
+        $rawTrim = is_string($raw) ? trim($raw) : '';
+        if ($rawTrim === '') {
+            throw new InvalidArgumentException('Некорректный JSON');
+        }
 
-// Шрифт для кириллицы
-$pdf->AddFont('DejaVu', '', 'DejaVuSansCondensed.ttf', true);
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->SetMargins(10, 10, 10);
-$pdf->SetAutoPageBreak(true, 14);
+        $generator = new SmiPdfGenerator('uploads/files/form');
+        $path = $generator->generate($rawTrim);
 
-// Заголовок
-$pdf->WriteWrapped(6, 'Министерство информации Республики Беларусь', 0, 'C');
-$pdf->Ln(1);
-$pdf->SetFont('DejaVu', '', 10);
-$pdf->WriteWrapped(6, 'ЗАЯВЛЕНИЕ о государственной регистрации (перерегистрации) средства массовой информации', 0, 'C');
-$pdf->Ln(2);
-$pdf->WriteWrapped(5, 'Прошу (просим) произвести государственную регистрацию (перерегистрацию) средства массовой информации:');
-$pdf->Ln(1);
-$pdf->WriteWrapped(5, '— ' . s($data['mainInfo']['name'] ?? '', '—'));
-$pdf->Ln(2);
+        // При встраивании в приложение: сохранение строки в БД, например $this->createRow($path);
 
-// 1. Учредитель
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '1. Учредитель (учредители) средства массовой информации');
-$pdf->Ln(1);
-$founders = is_array($data['founders'] ?? null) ? $data['founders'] : [];
-if (!$founders) {
-    $pdf->WriteWrapped(5, '-');
-} else {
-    renderFounders($pdf, $founders, '1.', 0, 'founders');
-}
-$pdf->Ln(2);
-
-// 1-1. Владелец сетевого издания (может отсутствовать в текущем data.js)
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '1-1. Владелец сетевого издания');
-$pdf->SetFont('DejaVu', '', 10);
-$domainName = $data['domainOwner']['domainName'] ?? '';
-$pdf->Row2Col('1-1.1. Доменное имя сетевого издания', s($domainName, '-'));
-$pdf->Ln(2);
-
-// 2-3
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '2. Название средства массовой информации');
-$pdf->SetFont('DejaVu', '', 10);
-$pdf->Row2Col('2. Название средства массовой информации', s($data['mainInfo']['name'] ?? '', '-'));
-$pdf->Ln(1);
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '3. Вид средства массовой информации');
-$pdf->SetFont('DejaVu', '', 10);
-$kindLine = s($data['mainInfo']['typeSmi'] ?? '', '-') . ' (' . s($data['mainInfo']['kindSmi'] ?? '', '') . ($data['mainInfo']['kindSmiOther'] ?? '' ? ', ' . s($data['mainInfo']['kindSmiOther'] ?? '') : '') . ')';
-$pdf->Row2Col('3. Вид средства массовой информации', trim($kindLine) !== '' ? $kindLine : '-');
-$pdf->Ln(2);
-
-// 4. Редакция (юр. лицо)
-$office = is_array($data['office'] ?? null) ? $data['office'] : [];
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '4. Юридическое лицо, на которое возложены функции редакции средства массовой информации');
-$pdf->SetFont('DejaVu', '', 10);
-$pdf->Row2Col('4.1. Полное наименование юридического лица', s($office['fullName'] ?? '', '-'));
-$pdf->Row2Col('4.1.1. Резидент какой страны', s($office['country'] ?? '', '-'));
-$pdf->Row2Col('4.1.2. Адрес юридического лица', s($office['address'] ?? '', '-'));
-
-$phoneCode = s($office['phoneCode'] ?? '', '');
-$phone = s($office['phone'] ?? '', '');
-$fax = s($office['fax'] ?? '', '');
-$email = s($office['email'] ?? '', '');
-$contacts = 'код ' . ($phoneCode !== '' ? $phoneCode : '-') .
-    ', телефон ' . ($phone !== '' ? $phone : '-') .
-    ', факс ' . ($fax !== '' ? $fax : '-') .
-    ', e-mail ' . ($email !== '' ? $email : '-');
-$pdf->Row2Col('4.1.3. Контактный телефон / факс / e-mail', $contacts);
-$pdf->Row2Col('4.1.4. Адрес веб-сайта', s($office['www'] ?? '', '-'));
-$pdf->Row2Col('4.1.5. Тип помещения', s($office['room'] ?? '', '-'));
-$pdf->Ln(1);
-
-// 4.2. Собственники имущества редакции (office.owners[])
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '4.2. Сведения о собственниках имущества (учредителях, участниках)');
-$pdf->SetFont('DejaVu', '', 10);
-$owners = is_array($office['owners'] ?? null) ? $office['owners'] : [];
-if (!$owners) {
-    $pdf->WriteWrapped(5, '-');
-} else {
-    renderOwners($pdf, $owners, '4.2.', 0, 'owners');
-}
-$pdf->Ln(2);
-
-// 4.3. Главный редактор
-$chief = is_array($office['chiefEditor'] ?? null) ? $office['chiefEditor'] : [];
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '4.3. Главный редактор (редактор)');
-$pdf->SetFont('DejaVu', '', 10);
-$pdf->Row2Col('4.3.1. Данные акта, на основании которого принято решение о назначении', s($chief['actAssignment'] ?? '', '-'));
-$pdf->Row2Col('4.3.2. Соответствует квалификационным требованиям', yn(!empty($chief['meetRequirements'])));
-$pdf->Row2Col('4.3.3. Учебное заведение, период обучения', s($chief['institution'] ?? '', '-'));
-$pdf->Row2Col('4.3.4. Сведения о работе на руководящих должностях', s($chief['formerJobInfo'] ?? '', '-'));
-$pdf->Row2Col('4.3.5. Фамилия, имя, отчество главного редактора (редактора)', s($chief['name'] ?? '', '-'));
-$pdf->Row2Col('4.3.5-1. Гражданство', s($chief['country'] ?? '', '-'));
-$pdf->Ln(2);
-
-// 5. Специализация
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '5. Специализация(тематика) средства массовой информации');
-$pdf->SetFont('DejaVu', '', 10);
-$spec = implode(', ', $data['mainInfo']['specialization'] ?? []);
-$specOther = s($data['mainInfo']['specializationOther'] ?? '', '');
-$specLine = trim($spec . ($specOther !== '' ? ' ; ' . $specOther : ''));
-$pdf->Row2Col('5.1. Специализация и тематика', $specLine !== '' ? $specLine : '-');
-$pdf->Ln(2);
-
-// 6-8
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '6. Периодичность и распространение');
-$pdf->SetFont('DejaVu', '', 10);
-$pdf->Row2Col('6.1. Периодичность', s($data['mainInfo']['periodicity'] ?? '', '-'));
-$pdf->Row2Col('6.2. Максимальный объем вещания', s($data['mainInfo']['volumeVoice'] ?? '', '-'));
-$pdf->Row2Col('6.3. Объем материалов белорусского производства, %', ($data['mainInfo']['bynVolume'] ?? '' !== '' ? s($data['mainInfo']['bynVolume']) . '%' : '-'));
-$langLine = implode(', ', $data['mainInfo']['language'] ?? []);
-$langOtherText = s($data['mainInfo']['languageOtherText'] ?? '', '');
-$langOther = s($data['mainInfo']['languageOther'] ?? '', '');
-$pdf->Row2Col(
-    '7. Язык средства массовой информации',
-    trim($langLine . ($langOtherText !== '' ? ' ' . $langOtherText . ' ' . $langOther : '')) !== ''
-        ? trim($langLine . ($langOtherText !== '' ? ' ' . $langOtherText . ' ' . $langOther : ''))
-        : '-'
-);
-$pdf->Row2Col(
-    '8. Территория распространения',
-    s($data['mainInfo']['distributionTerritory'] ?? '', '-') . (s($data['mainInfo']['distributionTerritoryDetail'] ?? '', '') !== '-' ? ' ' . s($data['mainInfo']['distributionTerritoryDetail'] ?? '', '') : '')
-);
-$pdf->Ln(2);
-
-// 9. Финансирование
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '9. Финансирование средства массовой информации соответствует требованиям законодательства');
-$pdf->SetFont('DejaVu', '', 10);
-$pdf->Row2Col('9.0. Финансирование соответствует законодательству', yn(!empty($data['financingMeetsLegalRqmts'])));
-
-$sponsors = is_array($data['sponsors'] ?? null) ? $data['sponsors'] : [];
-$jurSponsors = array_values(array_filter($sponsors, fn($s) => ($s['typeFace'] ?? '') === 'jurFace'));
-$fizSponsors = array_values(array_filter($sponsors, fn($s) => ($s['typeFace'] ?? '') === 'fizFace'));
-
-$pdf->Ln(1);
-$pdf->WriteWrapped(5, '9.1. Источники финансирования:');
-$pdf->Ln(1);
-
-if ($jurSponsors) {
-    $pdf->WriteWrapped(5, ind(1) . '9.1.1. Поступающие от юридических лиц:');
-    foreach ($jurSponsors as $i => $sp) {
-        $label = ind(2) . ($i + 1) . '. ';
-        $value = s($sp['name'] ?? '', '-') . ', ' . s($sp['country'] ?? '', '-') .
-            ', доля ' . s($sp['shareInCapital'] ?? '', '-') . '%; форма участия: ' . s($sp['participationForm'] ?? '', '-');
-        $pdf->Row2Col($label . 'Юридическое лицо', $value);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['message' => 'Заявка успешно принята'], JSON_UNESCAPED_UNICODE);
+    } catch (InvalidArgumentException $e) {
+        http_response_code(400);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['errors' => [$e->getMessage()]], JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['errors' => ['Ошибка при формировании заявления']], JSON_UNESCAPED_UNICODE);
     }
-}
-if ($fizSponsors) {
-    $pdf->WriteWrapped(5, ind(1) . '9.1.2. Поступающие от физических лиц:');
-    foreach ($fizSponsors as $i => $sp) {
-        $label = ind(2) . ($i + 1) . '. ';
-        $value = s($sp['name'] ?? '', '-') . ', ' . s($sp['country'] ?? '', '-') .
-            ', доля ' . s($sp['shareInCapital'] ?? '', '-') . '%; форма участия: ' . s($sp['participationForm'] ?? '', '-');
-        $pdf->Row2Col($label . 'Физическое лицо', $value);
-    }
-}
-if (!$jurSponsors && !$fizSponsors) {
-    $pdf->WriteWrapped(5, ind(1) . '-');
-}
-$pdf->Ln(2);
-
-// 10. Тираж (если требуется)
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '10. Предполагаемый тираж средства массовой информации (для печатного средства массовой информации)');
-$pdf->SetFont('DejaVu', '', 10);
-$pdf->Row2Col('10. Предполагаемый тираж', s($data['mainInfo']['circulation'] ?? '', '-'));
-$pdf->Ln(2);
-
-// 11. Прочие сведения
-$pdf->SetFont('DejaVu', '', 11);
-$pdf->WriteWrapped(6, '11. Сведения о том, является ли учредитель/главный редактор/журналист других средств массовой информации...');
-$pdf->SetFont('DejaVu', '', 10);
-$information = s($data['information'] ?? '', '');
-$confirm = array_key_exists('confirm', $data) ? $data['confirm'] : null;
-$pdf->Row2Col('11.1. Текст', $information !== '' ? $information : '-');
-if ($confirm !== null) {
-    $pdf->Row2Col('11.2. Ответ', yn((bool)$confirm));
-}
-
-const UPLOADS_BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'uploads';
-
-$typeSmi = $data['mainInfo']['typeSmi'] ?? '';
-$type = implode('_', preg_split('/\s+/u', (string) $typeSmi, -1, PREG_SPLIT_NO_EMPTY)) ?: 'smi';
-$timestamp = date('Y-m-d_H-i-s');
-$outDir = UPLOADS_BASE_PATH . DIRECTORY_SEPARATOR . $timestamp . '_' . $type;
-if (!is_dir($outDir)) {
-    @mkdir($outDir, 0755, true);
-}
-
-$jsonFile = $outDir . DIRECTORY_SEPARATOR . 'input.json';
-file_put_contents($jsonFile, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-
-$outFile = $outDir . DIRECTORY_SEPARATOR . 'zayavlenie_smi_' . $type . '.pdf';
-$pdf->Output('F', $outFile);
-
-if (PHP_SAPI !== 'cli') {
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['message' => 'Заявка успешно принята'], JSON_UNESCAPED_UNICODE);
+    exit;
 }

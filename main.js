@@ -689,6 +689,30 @@ function toggleActive(target){
     window.steps.addValStep5Checkboxes = addValStep5Checkboxes.bind(this);
     window.steps.addValStep5Sponsors = addValStep5Sponsors.bind(this);
     window.steps.addValStep6 = addValStep6.bind(this);
+
+    window._smiShowFieldError = showFieldError;
+    window._smiShowStep = showStep;
+
+    window._smiSetSubmitBusy = function (busy) {
+        if (!nextBtn || !prevBtn) return;
+        if (busy) {
+            if (!nextBtn.dataset._smiIdleText) {
+                nextBtn.dataset._smiIdleText = nextBtn.textContent;
+            }
+            nextBtn.disabled = true;
+            prevBtn.disabled = true;
+            nextBtn.textContent = 'Отправка…';
+            nextBtn.classList.add('btn-loading');
+        } else {
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('btn-loading');
+            nextBtn.textContent =
+                current === steps.length - 1
+                    ? 'Отправить заявление на регистрацию'
+                    : 'дальше';
+            prevBtn.disabled = current === 0;
+        }
+    };
 })();
 
 // Сборка JSON по data-path
@@ -777,18 +801,365 @@ function mergeFounders(obj) {
     return obj;
 }
 
-async function sendData() {
-    const container = document.querySelector('.container');
+function _smiEscapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function _smiFlattenServerErrors(errors) {
+    const out = [];
+    if (!Array.isArray(errors)) return out;
+    for (const e of errors) {
+        if (typeof e !== 'string') continue;
+        e.split(/\s*;\s*/).forEach((part) => {
+            const t = part.trim();
+            if (t) out.push(t);
+        });
+    }
+    return out;
+}
+
+function _smiParseErrorLine(line) {
+    const m = line.match(/^([^:]+):\s*(.+)$/);
+    if (!m) return null;
+    return { path: m[1].trim(), message: m[2].trim() };
+}
+
+function _smiServerPathToDotPath(path) {
+    return path.replace(/\[(\d+)\]/g, '.$1');
+}
+
+function _smiMergedFoundersDomPrefix(container, mergedIndex) {
+    const jurSaved = container.querySelectorAll(
+        '#jur-person-founders-container .card-jur-founder[data-state="saved"]'
+    );
+    const jurCount = jurSaved.length;
+    if (mergedIndex < jurCount) {
+        return `founders.${mergedIndex}`;
+    }
+    const physIdx = mergedIndex - jurCount;
+    return `founders_phys.${physIdx}`;
+}
+
+function _smiMapFoundersRootToDomPath(container, dotPath) {
+    const m = /^founders\.(\d+)(.*)$/.exec(dotPath);
+    if (!m) return dotPath;
+    const idx = parseInt(m[1], 10);
+    const rest = m[2] || '';
+    const base = _smiMergedFoundersDomPrefix(container, idx);
+    return base + rest;
+}
+
+function _smiTryFoundersPhysNestedFallback(container, dotPath) {
+    if (!dotPath.includes('founders_phys.') || !dotPath.includes('.founders.')) {
+        return null;
+    }
+    const alt = dotPath.replace(/\.founders\./g, '.founders_phys.');
+    return container.querySelector(`[data-path="${alt}"]`) ? alt : null;
+}
+
+function _smiClearAllFieldErrors(container) {
     if (!container) return;
-    // Перед сборкой JSON проверяем все шаги
-    if (typeof window._validateAllSteps === 'function') {
-        if (!window._validateAllSteps()) {
-            return;
+    container.querySelectorAll('.input-error').forEach((el) => {
+        el.classList.remove('input-error');
+        const n = el.nextElementSibling;
+        if (n && n.classList && n.classList.contains('input-error-text')) {
+            n.remove();
+        }
+    });
+}
+
+let _smiToastAutoHideTimer = null;
+
+function _smiDismissToast() {
+    const el = document.getElementById('smi-form-toast');
+    if (!el) return;
+    if (_smiToastAutoHideTimer) {
+        clearTimeout(_smiToastAutoHideTimer);
+        _smiToastAutoHideTimer = null;
+    }
+    el.classList.remove('smi-toast--visible');
+    el.setAttribute('aria-hidden', 'true');
+}
+
+function _smiEnsureFormToast() {
+    let el = document.getElementById('smi-form-toast');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'smi-form-toast';
+    el.className = 'smi-toast';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    el.setAttribute('aria-atomic', 'true');
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML =
+        '<div class="smi-toast__surface">' +
+        '<span class="smi-toast__icon smi-toast__icon--error" aria-hidden="true">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>' +
+        '</span>' +
+        '<span class="smi-toast__icon smi-toast__icon--info" aria-hidden="true">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>' +
+        '</span>' +
+        '<p class="smi-toast__text"></p>' +
+        '<button type="button" class="smi-toast__close" aria-label="Закрыть">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+        '</button>' +
+        '</div>';
+    const closeBtn = el.querySelector('.smi-toast__close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => _smiDismissToast());
+    }
+    document.body.appendChild(el);
+    return el;
+}
+
+function _smiShowFormAlert(_container, kind, message) {
+    const el = _smiEnsureFormToast();
+    const textEl = el.querySelector('.smi-toast__text');
+    if (textEl) textEl.textContent = message;
+
+    if (_smiToastAutoHideTimer) {
+        clearTimeout(_smiToastAutoHideTimer);
+        _smiToastAutoHideTimer = null;
+    }
+
+    el.classList.remove('smi-toast--error', 'smi-toast--info');
+    el.classList.add(kind === 'error' ? 'smi-toast--error' : 'smi-toast--info');
+    el.setAttribute('aria-hidden', 'false');
+    if (kind === 'error') {
+        el.setAttribute('role', 'alert');
+    } else {
+        el.setAttribute('role', 'status');
+    }
+
+    el.classList.remove('smi-toast--visible');
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+            el.classList.add('smi-toast--visible');
+        });
+    });
+
+    if (kind !== 'error') {
+        _smiToastAutoHideTimer = window.setTimeout(() => {
+            _smiDismissToast();
+        }, 7000);
+    }
+}
+
+function _smiHideFormAlert() {
+    _smiDismissToast();
+}
+
+function _smiPickFocusTarget(el) {
+    if (!el) return null;
+    if (
+        el instanceof HTMLInputElement &&
+        (el.type === 'radio' || el.type === 'checkbox')
+    ) {
+        const path = el.getAttribute('data-path');
+        if (path) {
+            const group = el
+                .closest('.container')
+                ?.querySelectorAll(`[data-path="${path.replace(/"/g, '\\"')}"]`);
+            if (group && group.length) {
+                const checked = Array.from(group).find(
+                    (x) => x instanceof HTMLInputElement && x.checked
+                );
+                return checked || el;
+            }
+        }
+        return el;
+    }
+    if (
+        el instanceof HTMLSelectElement ||
+        el instanceof HTMLTextAreaElement ||
+        (el instanceof HTMLInputElement && el.type !== 'hidden')
+    ) {
+        return el.disabled ? null : el;
+    }
+    const inner = el.querySelector(
+        'input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), select, textarea'
+    );
+    if (inner && !inner.disabled) return inner;
+    return el;
+}
+
+function _smiFocusFieldElement(el) {
+    if (!el) return;
+    const step = el.closest('.step');
+    const steps = Array.from(document.querySelectorAll('.step'));
+    const idx = steps.indexOf(step);
+    if (idx >= 0 && typeof window._smiShowStep === 'function') {
+        window._smiShowStep(idx, { scroll: true });
+    }
+    const target = _smiPickFocusTarget(el);
+    window.requestAnimationFrame(() => {
+        (target || el).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (
+            target &&
+            typeof target.focus === 'function' &&
+            !target.disabled
+        ) {
+            try {
+                target.focus({ preventScroll: true });
+            } catch (_) {
+                target.focus();
+            }
+        }
+    });
+}
+
+function _smiFindElementForDataPath(container, dataPath) {
+    if (!dataPath) return null;
+    const esc = dataPath.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    let list = container.querySelectorAll(`[data-path="${esc}"]`);
+    if (!list.length) {
+        const alt = _smiTryFoundersPhysNestedFallback(container, dataPath);
+        if (alt) {
+            const escAlt = alt.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            list = container.querySelectorAll(`[data-path="${escAlt}"]`);
+        }
+    }
+    if (!list.length && dataPath) {
+        const escPref = `${dataPath.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}.`;
+        const byChild = container.querySelector(`[data-path^="${escPref}"]`);
+        if (byChild) return byChild;
+    }
+    if (!list.length && dataPath === 'office.owners') {
+        const err = document.getElementById('office-owners-err');
+        if (err) return err;
+        return container.querySelector('[data-path^="office.owners."]');
+    }
+    if (!list.length && (dataPath === 'sponsors' || dataPath.startsWith('sponsors'))) {
+        const wrap = document.getElementById('sponsors-container');
+        if (wrap && wrap.parentElement) return wrap.parentElement;
+    }
+    if (!list.length && dataPath.startsWith('sponsors.')) {
+        const prefEsc = `${dataPath.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}.`;
+        const byPref = container.querySelector(`[data-path^="${prefEsc}"]`);
+        if (byPref) return byPref;
+    }
+    if (!list.length && /^Шаг\s*\d+/i.test(dataPath)) {
+        return document.getElementById('err_block');
+    }
+    if (!list.length && dataPath === 'mainInfo') {
+        return container.querySelector('[data-path^="mainInfo."]');
+    }
+    if (!list.length && dataPath === 'office') {
+        return container.querySelector('[data-path^="office."]');
+    }
+    if (!list.length) {
+        const dot = dataPath.indexOf('.');
+        const base = dot === -1 ? dataPath : dataPath.slice(0, dot);
+        if (base === 'domainOwner') {
+            return (
+                container.querySelector(`[data-path^="domainOwner."]`) ||
+                document.getElementById('domain-owner-container')
+            );
+        }
+    }
+    if (!list.length) {
+        const m = /^founders\.(\d+)$/.exec(dataPath);
+        if (m) {
+            const prefix = `founders.${m[1]}.`;
+            const escPref = prefix.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            const byPref = container.querySelector(`[data-path^="${escPref}"]`);
+            if (byPref) return byPref;
+        }
+        const m2 = /^founders_phys\.(\d+)$/.exec(dataPath);
+        if (m2) {
+            const prefix = `founders_phys.${m2[1]}.`;
+            const escPref = prefix.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            return container.querySelector(`[data-path^="${escPref}"]`);
+        }
+    }
+    const visible = Array.from(list).find(
+        (node) =>
+            node instanceof HTMLElement &&
+            !node.closest('[data-ignore-container]') &&
+            node.offsetParent !== null
+    );
+    return visible || list[0] || null;
+}
+
+function _smiResolveDataPathFromServerKey(container, pathKey) {
+    const dot = _smiServerPathToDotPath(pathKey);
+    if (dot.startsWith('founders.')) {
+        return _smiMapFoundersRootToDomPath(container, dot);
+    }
+    return dot;
+}
+
+function _smiApplyServerValidationErrors(container, lines) {
+    const showErr =
+        typeof window._smiShowFieldError === 'function'
+            ? window._smiShowFieldError
+            : null;
+    if (!showErr) return { focused: false, mapped: 0 };
+
+    let firstEl = null;
+    let mapped = 0;
+
+    for (const line of lines) {
+        const parsed = _smiParseErrorLine(line);
+        if (!parsed) continue;
+
+        const dataPath = _smiResolveDataPathFromServerKey(container, parsed.path);
+        const el = _smiFindElementForDataPath(container, dataPath);
+        if (el) {
+            showErr(el, parsed.message);
+            mapped += 1;
+            if (!firstEl) firstEl = el;
         }
     }
 
+    if (firstEl) {
+        _smiFocusFieldElement(firstEl);
+    }
+
+    return { focused: !!firstEl, mapped };
+}
+
+function _smiShowSubmitSuccess(container, message) {
+    const text = message || 'Заявка успешно принята';
+    container.innerHTML =
+        '<div class="smi-success" role="status">' +
+        '<div class="smi-success__card">' +
+        '<div class="smi-success__icon" aria-hidden="true">' +
+        '<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="28" r="28" fill="#e8f5e9"/><path d="M16 28.5l8.5 8.5L40 19" stroke="#2e7d32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</div>' +
+        '<h1 class="smi-success__title">Заявление отправлено</h1>' +
+        '<p class="smi-success__text">' +
+        _smiEscapeHtml(text) +
+        '</p>' +
+        '<p class="smi-success__hint">Ваша заявка была принята и будет рассмотрена в ближайшее время.</p>' +
+        '</div>' +
+        '</div>';
+    document.title = 'Заявление отправлено';
+}
+
+async function sendData() {
+    const container = document.querySelector('.container');
+    if (!container) return;
+
+    // if (typeof window._validateAllSteps === 'function') {
+    //     if (!window._validateAllSteps()) {
+    //         return;
+    //     }
+    // }
+
     const data = buildJsonFromForm(container);
     console.log('Собранный JSON:', data);
+
+    _smiHideFormAlert();
+    _smiClearAllFieldErrors(container);
+
+    if (typeof window._smiSetSubmitBusy === 'function') {
+        window._smiSetSubmitBusy(true);
+    }
 
     try {
         const response = await fetch(send_url, {
@@ -799,28 +1170,85 @@ async function sendData() {
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) {
-            let msg = 'Ошибка при отправке заявки';
+        const status = response.status;
+        const rawText = await response.text();
+        let payload = null;
+        if (rawText) {
             try {
-                const json = await response.json();
-                if (Array.isArray(json.errors) && json.errors.length > 0) {
-                    msg = json.errors.join('\n');
-                }
-            } catch (_) {}
-            alert(msg);
+                payload = JSON.parse(rawText);
+            } catch (_) {
+                payload = null;
+            }
+        }
+
+        if (response.ok) {
+            const msg =
+                payload && typeof payload.message === 'string'
+                    ? payload.message
+                    : 'Заявка успешно принята';
+            _smiShowSubmitSuccess(container, msg);
             return;
         }
 
-        let result;
-        try {
-            result = await response.json();
-        } catch (_) {
-            result = {};
+        if (typeof window._smiSetSubmitBusy === 'function') {
+            window._smiSetSubmitBusy(false);
         }
-        alert(result.message || 'Заявка успешно принята');
+
+        const errorsArr =
+            payload && Array.isArray(payload.errors) ? payload.errors : [];
+        const flat = _smiFlattenServerErrors(errorsArr);
+
+        if (status === 400 && flat.length > 0) {
+            const { focused, mapped } = _smiApplyServerValidationErrors(
+                container,
+                flat
+            );
+            if (mapped === 0) {
+                _smiShowFormAlert(
+                    container,
+                    'error',
+                    flat.join(' ')
+                );
+            } else if (!focused) {
+                _smiShowFormAlert(
+                    container,
+                    'error',
+                    'Данные не прошли проверку. Проверьте выделенные поля.'
+                );
+            } else {
+                _smiShowFormAlert(
+                    container,
+                    'info',
+                    'Данные не прошли проверку. Проверьте выделенные поля.'
+                );
+            }
+            return;
+        }
+
+        if (status >= 500) {
+            _smiShowFormAlert(
+                container,
+                'error',
+                'Сервис временно недоступен. Что-то пошло не так — попробуйте отправить заявление позже.'
+            );
+            return;
+        }
+
+        const fallback =
+            flat.length > 0
+                ? flat.join(' ')
+                : 'Не удалось обработать ответ сервера. Попробуйте позже.';
+        _smiShowFormAlert(container, 'error', fallback);
     } catch (e) {
         console.error(e);
-        alert('Не удалось отправить данные на сервер или получить PDF');
+        if (typeof window._smiSetSubmitBusy === 'function') {
+            window._smiSetSubmitBusy(false);
+        }
+        _smiShowFormAlert(
+            container,
+            'error',
+            'Не удалось связаться с сервером. Проверьте подключение к сети и попробуйте позже.'
+        );
     }
 }
 

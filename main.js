@@ -239,6 +239,9 @@ function toggleActive(target){
             case 5:
                 valid = addValStep5(step);
                 break;
+            case 6:
+                valid = addValStep6(step);
+                break;
         }
         return valid;
     }
@@ -472,7 +475,18 @@ function toggleActive(target){
     }
 
     function addValStep6(activeStep){
-
+        let input = activeStep.querySelector("input:checked");
+        let err_block = activeStep.querySelector(".inline-options");
+        if(!input){
+            return false;
+        }
+        if(input.value === 'false'){
+            showFieldError(err_block, "необходимо подтвердить, что все введенные данные верны и соответствуют действительности");
+            return false;
+        }else{
+            clearFieldError(err_block)
+        }
+        return true;
     }
 
     function validateAllSteps() {
@@ -674,6 +688,7 @@ function toggleActive(target){
     window.steps.addValStep5 = addValStep5.bind(this);
     window.steps.addValStep5Checkboxes = addValStep5Checkboxes.bind(this);
     window.steps.addValStep5Sponsors = addValStep5Sponsors.bind(this);
+    window.steps.addValStep6 = addValStep6.bind(this);
 })();
 
 // Сборка JSON по data-path
@@ -906,6 +921,10 @@ function changeMeetRequirements(){
 
 function changeFinancingMeetsLegalRqmts(){
     steps.addValStep5Checkboxes(document.querySelector('.step.active'));
+}
+
+function changeConfirm(){
+    steps.addValStep6(document.querySelector('.step.active'));
 }
 
 function clearValidationUI(root) {

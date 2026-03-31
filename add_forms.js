@@ -1890,11 +1890,11 @@ const domain_owner_container = function () {
         <div class="row">
           <div>
             <label>Код:</label>
-            <input type="tel" inputmode="numeric" data-path="domainOwner.phoneCode" required>
+            <input type="tel" inputmode="numeric" data-path="domainOwner.phoneCode"  required>
           </div>
           <div>
             <label>Телефон:</label>
-            <input type="tel" data-path="domainOwner.phone" required>
+            <input type="tel" data-path="domainOwner.phone" data-validate="phone" required>
           </div>
           <div>
             <label>Факс</label>

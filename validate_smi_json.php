@@ -26,10 +26,10 @@ class SmiJsonValidator {
                 $add('mainInfo.specialization: выберите хотя бы один вариант');
             }
 
-            $subj = $main['subjects'] ?? [];
-            if (!is_array($subj) || count($subj) === 0) {
-                $add('mainInfo.subjects: выберите хотя бы один вариант');
-            }
+//            $subj = $main['subjects'] ?? [];
+//            if (!is_array($subj) || count($subj) === 0) {
+//                $add('mainInfo.subjects: выберите хотя бы один вариант');
+//            }
 
             if (!empty($main['specializationOtherEnabled']) && $this->isEmpty($this->get($main, 'specializationOther'))) {
                 $add('mainInfo.specializationOther: заполните при включённой доп. специализации');

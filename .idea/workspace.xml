@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e2953c47-41a4-4cbf-a64d-c5900d8a133c" name="Changes" comment="Раскомментирована проверка" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="CSS File" />
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;lAirol&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/lAirol/mininform.git&quot;,
+    &quot;accountId&quot;: &quot;4252e976-10df-48e6-8a75-e275073f97c1&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="C:/xampp/php/php.exe" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="3B32sEzepGKNxenKans5HSI3hug" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "H:/mininform1",
+    "list.type.of.created.stylesheet": "CSS",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "to.speed.mode.migration.done": "true",
+    "two.files.diff.last.used.file": "H:/mininform/ZIP/form-update/form.html",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="H:\mininform1" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PS-253.30387.85" />
+        <option value="bundled-php-predefined-a98d8de5180a-0e0d91225499-com.jetbrains.php.sharedIndexes-PS-253.30387.85" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e2953c47-41a4-4cbf-a64d-c5900d8a133c" name="Changes" comment="" />
+      <created>1773703637311</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1773703637311</updated>
+      <workItem from="1773703638326" duration="568000" />
+      <workItem from="1773785454492" duration="1619000" />
+      <workItem from="1773787096247" duration="18352000" />
+      <workItem from="1773877152033" duration="4167000" />
+      <workItem from="1773966019367" duration="6118000" />
+      <workItem from="1774021675662" duration="33645000" />
+      <workItem from="1774265316254" duration="12417000" />
+      <workItem from="1774399773201" duration="19378000" />
+    </task>
+    <task id="LOCAL-00001" summary="1">
+      <option name="closed" value="true" />
+      <created>1773787110481</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1773787110481</updated>
+    </task>
+    <task id="LOCAL-00002" summary="2">
+      <option name="closed" value="true" />
+      <created>1773791513156</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1773791513156</updated>
+    </task>
+    <task id="LOCAL-00003" summary="3">
+      <option name="closed" value="true" />
+      <created>1773793303439</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1773793303439</updated>
+    </task>
+    <task id="LOCAL-00004" summary="интеллигентный балаган">
+      <option name="closed" value="true" />
+      <created>1773794050452</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1773794050452</updated>
+    </task>
+    <task id="LOCAL-00005" summary="вежливый хаос">
+      <option name="closed" value="true" />
+      <created>1773796935205</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1773796935205</updated>
+    </task>
+    <task id="LOCAL-00006" summary="рациональный абсурд">
+      <option name="closed" value="true" />
+      <created>1773799033404</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1773799033404</updated>
+    </task>
+    <task id="LOCAL-00007" summary="плановая несуразица">
+      <option name="closed" value="true" />
+      <created>1773836461511</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1773836461511</updated>
+    </task>
+    <task id="LOCAL-00008" summary="эстетическая неадекватность">
+      <option name="closed" value="true" />
+      <created>1773877161896</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1773877161896</updated>
+    </task>
+    <task id="LOCAL-00009" summary="АЛЯЯЯЯЯРМ!!!!!! ВАЖДНЫЙ КОММИТ !!!! &#10;АЛЯЯЯЯЯРМ!!!!!!!!&#10;ТУТ кнопка отмена и сохранение полей перед редактированием &#10;&#10;--контролируемое безумие feat">
+      <option name="closed" value="true" />
+      <created>1773880199379</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1773880199379</updated>
+    </task>
+    <task id="LOCAL-00010" summary="удаление поля ошибки при отмене&#10;--регламентированный сюр feat">
+      <option name="closed" value="true" />
+      <created>1773881383412</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1773881383412</updated>
+    </task>
+    <task id="LOCAL-00011" summary="перенесены кнопки внутрь">
+      <option name="closed" value="true" />
+      <created>1773966741819</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1773966741819</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Мультиселект">
+      <option name="closed" value="true" />
+      <created>1773967459145</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1773967459145</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Модалки">
+      <option name="closed" value="true" />
+      <created>1773972825109</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1773972825109</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Правки">
+      <option name="closed" value="true" />
+      <created>1774022418639</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1774022418639</updated>
+    </task>
+    <task id="LOCAL-00015" summary="ироничная экзистенция">
+      <option name="closed" value="true" />
+      <created>1774029777922</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1774029777922</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Формирование pdf">
+      <option name="closed" value="true" />
+      <created>1774035441006</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1774035441006</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Доп проверки">
+      <option name="closed" value="true" />
+      <created>1774186627203</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1774186627203</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Доп проверки">
+      <option name="closed" value="true" />
+      <created>1774190491104</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1774190491104</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Доп проверки">
+      <option name="closed" value="true" />
+      <created>1774190831974</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1774190831974</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Добавление на 100%">
+      <option name="closed" value="true" />
+      <created>1774193247323</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1774193247323</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Проверка инпутов">
+      <option name="closed" value="true" />
+      <created>1774217911311</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1774217911311</updated>
+    </task>
+    <task id="LOCAL-00022" summary="3.2 маленький фикс">
+      <option name="closed" value="true" />
+      <created>1774219097796</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1774219097796</updated>
+    </task>
+    <task id="LOCAL-00023" summary="3. чекбоксы">
+      <option name="closed" value="true" />
+      <created>1774220437271</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1774220437271</updated>
+    </task>
+    <task id="LOCAL-00024" summary="3.2 обработка отсутствия">
+      <option name="closed" value="true" />
+      <created>1774221466729</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1774221466729</updated>
+    </task>
+    <task id="LOCAL-00025" summary="2.2 фикс гос юр лица">
+      <option name="closed" value="true" />
+      <created>1774270393292</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1774270393292</updated>
+    </task>
+    <task id="LOCAL-00026" summary="2.2 фикс гос юр лица">
+      <option name="closed" value="true" />
+      <created>1774270481632</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1774270481632</updated>
+    </task>
+    <task id="LOCAL-00027" summary="2.2 фикс гос юр лица">
+      <option name="closed" value="true" />
+      <created>1774293785140</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1774293785140</updated>
+    </task>
+    <task id="LOCAL-00028" summary="сохранение">
+      <option name="closed" value="true" />
+      <created>1774296647512</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1774296647512</updated>
+    </task>
+    <task id="LOCAL-00029" summary="6 шаг да/нет">
+      <option name="closed" value="true" />
+      <created>1774476128517</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1774476128517</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Финал !?">
+      <option name="closed" value="true" />
+      <created>1774476914644</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1774476914644</updated>
+    </task>
+    <task id="LOCAL-00031" summary="Раскомментирована проверка">
+      <option name="closed" value="true" />
+      <created>1774477048983</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1774477048983</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="вежливый хаос" />
+    <MESSAGE value="рациональный абсурд" />
+    <MESSAGE value="плановая несуразица" />
+    <MESSAGE value="эстетическая неадекватность" />
+    <MESSAGE value="АЛЯЯЯЯЯРМ!!!!!! ВАЖДНЫЙ КОММИТ !!!! &#10;АЛЯЯЯЯЯРМ!!!!!!!!&#10;ТУТ кнопка отмена и сохранение полей перед редактированием &#10;&#10;--контролируемое безумие feat" />
+    <MESSAGE value="удаление поля ошибки при отмене&#10;--регламентированный сюр feat" />
+    <MESSAGE value="перенесены кнопки внутрь" />
+    <MESSAGE value="Мультиселект" />
+    <MESSAGE value="Модалки" />
+    <MESSAGE value="Правки" />
+    <MESSAGE value="ироничная экзистенция" />
+    <MESSAGE value="Формирование pdf" />
+    <MESSAGE value="Доп проверки" />
+    <MESSAGE value="Добавление на 100%" />
+    <MESSAGE value="Проверка инпутов" />
+    <MESSAGE value="3.2 маленький фикс" />
+    <MESSAGE value="3. чекбоксы" />
+    <MESSAGE value="3.2 обработка отсутствия" />
+    <MESSAGE value="2.2 фикс гою ур лица" />
+    <MESSAGE value="Валидация php" />
+    <MESSAGE value="Валидация php" />
+    <MESSAGE value="сохранение" />
+    <MESSAGE value="6 шаг да/нет" />
+    <MESSAGE value="Финал !?" />
+    <MESSAGE value="Раскомментирована проверка" />
+    <option name="LAST_COMMIT_MESSAGE" value="Раскомментирована проверка" />
+  </component>
+</project>

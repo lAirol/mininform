@@ -1,0 +1,193 @@
+{
+    "mainInfo": {
+        "name": 123,
+        "typeSmi": "Электронное СМИ",
+        "kindSmi": "Другое",
+        "kindSmiOther": 12,
+        "specialization": [
+            "Научная",
+            "Научно-популярная",
+            "Литературно-художественная"
+        ],
+        "specializationOtherEnabled": "on",
+        "specializationOther": "qweqwe1231",
+        "subjects": [
+            "Государство",
+            "Детская",
+            "Для женщин и мужчин",
+            "Домашнее хозяйство",
+            "Жилищно-коммунальное хозяйство"
+        ],
+        "subjectsOtherEnabled": "on",
+        "subjectsOther": 12312313,
+        "periodicity": "Один раз в полугодие",
+        "volumeVoice": "до 24 часов",
+        "bynVolume": 22,
+        "circulation": 123,
+        "language": [
+            "Польский",
+            "Немецкий",
+            "Французский"
+        ],
+        "languageOther": "Другое",
+        "languageOtherText": "Языки распространения:",
+        "distributionTerritory": "Другое",
+        "distributionTerritoryDetail": "Предполагаемая территория распростанен",
+        "distributionTerritoryDetailExtra": "Уточнение названия территории:"
+    },
+    "founders": [
+        {
+            "typeFace": "jurFace",
+            "isState": false,
+            "name": 1231231,
+            "country": "Российская Федерация",
+            "capitalPercent": 12,
+            "address": "qwe123123",
+            "phoneCode": 1231,
+            "phone": 13123213123,
+            "email": "qweqw@Email.Email",
+            "founders": [
+                {
+                    "typeFace": "jurFace",
+                    "name": 2222222,
+                    "country": "Российская Федерация",
+                    "capitalPercent": 11,
+                    "isState": false,
+                    "founders": [
+                        {
+                            "typeFace": "jurFace",
+                            "name": 12,
+                            "country": "Российская Федерация",
+                            "capitalPercent": 12,
+                            "isState": false,
+                            "founders": [
+                                {
+                                    "typeFace": "jurFace",
+                                    "name": 12,
+                                    "country": "Российская Федерация",
+                                    "capitalPercent": 100,
+                                    "isState": true
+                                }
+                            ]
+                        },
+                        {
+                            "typeFace": "fizFace",
+                            "name": 1212,
+                            "country": "Российская Федерация",
+                            "capitalPercent": 12
+                        },
+                        {
+                            "typeFace": "fizFace",
+                            "name": 12,
+                            "country": "Российская Федерация",
+                            "capitalPercent": 76
+                        }
+                    ]
+                },
+                {
+                    "typeFace": "fizFace",
+                    "name": 12,
+                    "country": "Республика Беларусь",
+                    "capitalPercent": 89
+                }
+            ]
+        },
+        {
+            "fullName": 123,
+            "typeFace": "fizFace",
+            "citizenship": "Республика Беларусь",
+            "address": 123,
+            "phoneCode": 123123,
+            "phone": 12312323213,
+            "email": "Email@Email.Email",
+            "isServingSentence": false,
+            "isIncapacitated": false,
+            "isDeprivedOfMediaRights": false,
+            "isMediaTerminated": false
+        }
+    ],
+    "office": {
+        "fullName": 12312312,
+        "country": "Латвия",
+        "address": 12312313,
+        "phoneCode": 123,
+        "phone": 123123123123,
+        "fax": 123,
+        "email": "Email@Email.Email",
+        "www": 1312131,
+        "meetsLegalRqmts": true,
+        "room": "Жилом помещении",
+        "owners": [
+            {
+                "typeFace": "jurFace",
+                "name": 123,
+                "country": "Российская Федерация",
+                "capitalPercent": 12,
+                "isState": false,
+                "owners": [
+                    {
+                        "typeFace": "jurFace",
+                        "name": 123,
+                        "country": "Российская Федерация",
+                        "capitalPercent": 12,
+                        "isState": false,
+                        "owners": [
+                            {
+                                "typeFace": "fizFace",
+                                "name": 123,
+                                "country": "Российская Федерация",
+                                "capitalPercent": 11
+                            },
+                            {
+                                "typeFace": "fizFace",
+                                "name": 123123,
+                                "country": "Республика Беларусь",
+                                "capitalPercent": 89
+                            }
+                        ]
+                    },
+                    {
+                        "typeFace": "fizFace",
+                        "name": 123,
+                        "country": "Республика Беларусь",
+                        "capitalPercent": 88
+                    }
+                ]
+            },
+            {
+                "typeFace": "fizFace",
+                "name": 123,
+                "country": "Российская Федерация",
+                "capitalPercent": 88
+            }
+        ],
+        "chiefEditor": {
+            "name": 123,
+            "country": "Иностранный гражданин",
+            "actAssignment": 123,
+            "meetRequirements": true,
+            "institution": 123,
+            "formerJobInfo": 123
+        }
+    },
+    "financingMeetsLegalRqmts": true,
+    "sponsors": [
+        {
+            "typeFace": "fizFace",
+            "name": 123,
+            "country": "Латвия",
+            "shareInCapital": 12,
+            "address": 123,
+            "participationForm": 123
+        },
+        {
+            "typeFace": "jurFace",
+            "name": 12,
+            "country": "Российская Федерация",
+            "shareInCapital": 12,
+            "participationForm": 12
+        }
+    ],
+    "information": "вляется ли учредитель (",
+    "confirm": true
+}

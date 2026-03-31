@@ -1,0 +1,45 @@
+{
+    "mainInfo": {
+        "name": 123,
+        "typeSmi": "Сетевое СМИ",
+        "kindSmi": "Радиопрограмма",
+        "specialization": [
+            "Научная",
+            "Производственно-практическая"
+        ],
+        "subjects": [
+            "Государство",
+            "Детектив"
+        ],
+        "periodicity": "Еженедельно",
+        "volumeVoice": "1 - 6 часов",
+        "bynVolume": 12,
+        "circulation": 1231,
+        "language": [
+            "Белорусский",
+            "Украинский"
+        ],
+        "distributionTerritory": "Международная",
+        "distributionTerritoryDetailExtra": 123
+    },
+    "office": {
+        "fullName": 12312312,
+        "country": "Российская Федерация",
+        "address": 123,
+        "phoneCode": 123321,
+        "phone": 12313,
+        "email": "Email@Emai.Email",
+        "meetsLegalRqmts": true,
+        "room": "Жилом помещении",
+        "chiefEditor": {
+            "name": "qweqwe",
+            "country": "Гражданин Республики Беларусь",
+            "actAssignment": 12313,
+            "meetRequirements": true,
+            "institution": 123123,
+            "formerJobInfo": 123123
+        }
+    },
+    "financingMeetsLegalRqmts": true,
+    "founders": []
+}

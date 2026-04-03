@@ -655,7 +655,7 @@ function toggleActive(target){
         // Телефон: цифры, +, пробел, скобки и дефис
         if (validator === 'phone') {
             const orig = target.value;
-            const filtered = orig.replace(/[^0-9+()\-\s]/g, '');
+            const filtered = orig.replace(/[^0-9()\-\s]/g, '');
             if (filtered !== orig) {
                 const pos = target.selectionStart || filtered.length;
                 target.value = filtered;
@@ -669,7 +669,7 @@ function toggleActive(target){
         // Код города: только цифры
         if (validator === 'phoneCode') {
             const orig = target.value;
-            const filtered = orig.replace(/[^0-9]/g, '');
+            const filtered = orig.replace(/[^0-9+]/g, '')
             if (filtered !== orig) {
                 const pos = target.selectionStart || filtered.length;
                 target.value = filtered;

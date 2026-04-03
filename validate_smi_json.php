@@ -237,11 +237,11 @@ class SmiJsonValidator {
     }
 
     private function validPhone(string $v): bool {
-        return (bool)preg_match('/^[0-9+()\-\s]{5,}$/', $v);
+        return (bool)preg_match('/^[0-9()\-\s]{5,}$/', $v);
     }
 
     private function validPhoneCode(string $v): bool {
-        return (bool)preg_match('/^\d{2,6}$/', $v);
+        return (bool)preg_match('/^\+?\d{2,6}$/', $v);
     }
 
     private function validPercent($v, float $max = 100): bool {

@@ -121,7 +121,14 @@ function toggleActive(target){
 
         const isSelect = el instanceof HTMLSelectElement;
         const value = isSelect
-            ? (el.multiple ? (el.selectedOptions.length ? '__selected__' : '') : (el.value || ''))
+            ? (el.multiple
+                ? (() => {
+                    const selected = Array.from(el.selectedOptions || []);
+                    const meaningful = selected.filter((opt) => !opt.disabled && String(opt.value || '').trim() !== '');
+                    return meaningful.length ? '__selected__' : '';
+                })()
+                : (el.value || '')
+            )
             : (el.value || '').trim();
         const validator = el.getAttribute('data-validate');
 
@@ -236,6 +243,9 @@ function toggleActive(target){
             case 3:
                 valid = addValStep3(step);
                 break;
+            case 4:
+                valid = addValStep4(step);
+                break;
             case 5:
                 valid = addValStep5(step);
                 break;
@@ -244,6 +254,62 @@ function toggleActive(target){
                 break;
         }
         return valid;
+    }
+
+    function addValStep4(activeStep) {
+        const select = activeStep.querySelector(
+            'select[data-path="mainInfo.specialization"][multiple]'
+        );
+        if (!select) return true;
+
+        const otherEnabled = !!activeStep.querySelector(
+            'input[type="checkbox"][data-path="mainInfo.specializationOtherEnabled"]:checked'
+        );
+        const otherInput = activeStep.querySelector(
+            'input[data-path="mainInfo.specializationOther"]'
+        );
+
+        const hasSelected = (() => {
+            const selected = Array.from(select.selectedOptions || []);
+            const meaningful = selected.filter(
+                (opt) => !opt.disabled && String(opt.value || '').trim() !== ''
+            );
+            return meaningful.length > 0;
+        })();
+        const hasOtherText =
+            otherEnabled && otherInput && String(otherInput.value || '').trim() !== '';
+
+        if (hasSelected || hasOtherText) {
+            // Если выбор сделан — чистим ошибку на видимом поле поиска (если оно есть).
+            const wrap = select.parentNode?.querySelector('.multi-select-wrap');
+            const input = wrap ? wrap.querySelector('.multi-select-input') : null;
+            if (input) {
+                clearFieldError(input);
+            } else {
+                clearFieldError(select);
+            }
+            return true;
+        }
+
+        const wrap = select.parentNode?.querySelector('.multi-select-wrap');
+        const input = wrap ? wrap.querySelector('.multi-select-input') : null;
+        const target = input || select;
+
+        showFieldError(
+            target,
+            'Укажите специализацию: выберите из списка или заполните «Другая».'
+        );
+        if (typeof target.scrollIntoView === 'function') {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (input && typeof input.focus === 'function') {
+            try {
+                input.focus({ preventScroll: true });
+            } catch (_) {
+                input.focus();
+            }
+        }
+        return false;
     }
 
     function addValStep2(){

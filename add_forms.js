@@ -1855,6 +1855,16 @@ const domain_owner_container = function () {
     const container = document.getElementById('domain-owner-container');
     if (!container) return;
 
+    const COUNTRY_OPTIONS = `
+        <option value="" selected disabled hidden></option>
+        <option>Республика Беларусь</option>
+        <option>Российская Федерация</option>
+        <option>Латвия</option>
+        <option>Литва</option>
+        <option>Эстония</option>
+        <option>Польша</option>
+    `;
+
     function renderOwnerCard(type) {
         const isFiz = type === 'fiz';
         container.innerHTML = `
@@ -1869,7 +1879,7 @@ const domain_owner_container = function () {
           </div>
           <div>
             <label>Резидент какой страны</label>
-            <input type="text" data-path="domainOwner.country" required>
+            <select data-path="domainOwner.country" class="office-owner-dialog-country" required>${COUNTRY_OPTIONS}</select>
           </div>
         </div>
 

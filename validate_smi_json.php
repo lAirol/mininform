@@ -233,7 +233,7 @@ class SmiJsonValidator {
     }
 
     private function validEmail(string $v): bool {
-        return (bool)preg_match('/^[^\s@]+@[^\s@]+\.[^\s@]+$/', $v);
+        return (bool)preg_match('/^(?!.*\.\.)[A-Za-z0-9](?:[A-Za-z0-9._%+\-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?)+$/', $v);
     }
 
     private function validPhone(string $v): bool {

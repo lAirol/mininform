@@ -87,9 +87,9 @@ class SmiJsonValidator {
             if ($this->isEmpty($this->get($d, 'phoneCode'))) $add('domainOwner.phoneCode: поле обязательно');
             if ($this->isEmpty($this->get($d, 'phone'))) $add('domainOwner.phone: поле обязательно');
             if ($this->isEmpty($this->get($d, 'email'))) $add('domainOwner.email: поле обязательно');
-            if (!$this->validPhoneCode($this->trim($d['phoneCode'] ?? ''))) $add('domainOwner.phoneCode: корректный код (2–6 цифр)');
-            if (!$this->validPhone($this->trim($d['phone'] ?? ''))) $add('domainOwner.phone: корректный номер');
-            if (!$this->validEmail($this->trim($d['email'] ?? ''))) $add('domainOwner.email: корректный адрес');
+            if (!$this->validPhoneCode($this->trim($d['phoneCode'] ?? ''))) $add('domainOwner.phoneCode: укажите корректный код (2–6 цифр)');
+            if (!$this->validPhone($this->trim($d['phone'] ?? ''))) $add('domainOwner.phone: укажите корректный номер');
+            if (!$this->validEmail($this->trim($d['email'] ?? ''))) $add('domainOwner.email: укажите корректный адрес');
 
             $typeFace = $this->trim($d['typeFace'] ?? '');
             if ($typeFace === 'jurFace') {
@@ -113,9 +113,9 @@ class SmiJsonValidator {
                     if ($this->isEmpty($this->get($f, 'phoneCode'))) $add("founders[{$i}].phoneCode: поле обязательно");
                     if ($this->isEmpty($this->get($f, 'phone'))) $add("founders[{$i}].phone: поле обязательно");
                     if ($this->isEmpty($this->get($f, 'email'))) $add("founders[{$i}].email: поле обязательно");
-                    if (!$this->validPhoneCode($this->trim($f['phoneCode'] ?? ''))) $add("founders[{$i}].phoneCode: корректный код");
-                    if (!$this->validPhone($this->trim($f['phone'] ?? ''))) $add("founders[{$i}].phone: корректный номер");
-                    if (!$this->validEmail($this->trim($f['email'] ?? ''))) $add("founders[{$i}].email: корректный адрес");
+                    if (!$this->validPhoneCode($this->trim($f['phoneCode'] ?? ''))) $add("founders[{$i}].phoneCode: укажите корректный код");
+                    if (!$this->validPhone($this->trim($f['phone'] ?? ''))) $add("founders[{$i}].phone: укажите корректный номер");
+                    if (!$this->validEmail($this->trim($f['email'] ?? ''))) $add("founders[{$i}].email: укажите корректный адрес");
 
                     $cap = $f['capitalPercent'] ?? null;
                     if (!$this->isStateOrg($f)) {
@@ -134,9 +134,9 @@ class SmiJsonValidator {
                     if ($this->isEmpty($this->get($f, 'phoneCode'))) $add("founders[{$i}].phoneCode: поле обязательно");
                     if ($this->isEmpty($this->get($f, 'phone'))) $add("founders[{$i}].phone: поле обязательно");
                     if ($this->isEmpty($this->get($f, 'email'))) $add("founders[{$i}].email: поле обязательно");
-                    if (!$this->validPhoneCode($this->trim($f['phoneCode'] ?? ''))) $add("founders[{$i}].phoneCode: корректный код");
-                    if (!$this->validPhone($this->trim($f['phone'] ?? ''))) $add("founders[{$i}].phone: корректный номер");
-                    if (!$this->validEmail($this->trim($f['email'] ?? ''))) $add("founders[{$i}].email: корректный адрес");
+                    if (!$this->validPhoneCode($this->trim($f['phoneCode'] ?? ''))) $add("founders[{$i}].phoneCode: укажите корректный код");
+                    if (!$this->validPhone($this->trim($f['phone'] ?? ''))) $add("founders[{$i}].phone: укажите корректный номер");
+                    if (!$this->validEmail($this->trim($f['email'] ?? ''))) $add("founders[{$i}].email: укажите корректный адрес");
 
                     if (!empty($f['isServingSentence']) || !empty($f['isIncapacitated']) || !empty($f['isDeprivedOfMediaRights']) || !empty($f['isMediaTerminated'])) {
                         $add("founders[{$i}]: по ограничениям все ответы должны быть «нет»");
@@ -157,9 +157,9 @@ class SmiJsonValidator {
             if ($this->isEmpty($this->get($office, 'phone'))) $add('office.phone: поле обязательно');
             if ($this->isEmpty($this->get($office, 'email'))) $add('office.email: поле обязательно');
             if ($this->isEmpty($this->get($office, 'room'))) $add('office.room: поле обязательно');
-            if (!$this->validPhoneCode($this->trim($office['phoneCode'] ?? ''))) $add('office.phoneCode: корректный код');
-            if (!$this->validPhone($this->trim($office['phone'] ?? ''))) $add('office.phone: корректный номер');
-            if (!$this->validEmail($this->trim($office['email'] ?? ''))) $add('office.email: корректный адрес');
+            if (!$this->validPhoneCode($this->trim($office['phoneCode'] ?? ''))) $add('office.phoneCode: укажите корректный код');
+            if (!$this->validPhone($this->trim($office['phone'] ?? ''))) $add('office.phone: укажите корректный номер');
+            if (!$this->validEmail($this->trim($office['email'] ?? ''))) $add('office.email: укажите корректный адрес');
 
             if (array_key_exists('meetsLegalRqmts', $office) && ($office['meetsLegalRqmts'] === false || $office['meetsLegalRqmts'] === 'false')) {
                 $add('office.meetsLegalRqmts: помещение должно соответствовать требованиям законодательства');

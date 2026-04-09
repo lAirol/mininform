@@ -168,8 +168,13 @@ function toggleActive(target){
         }
 
         if (validator === 'phoneCode') {
-            const codeRe = /^\d{2,6}$/;
-            if (!codeRe.test(value)) {
+            const trimmed = value.trim();
+            const allowedCharsRe = /^\+?[0-9()\-\s]+$/;
+            const digitsOnly = trimmed.replace(/\D/g, '');
+            const hasValidDigitsCount = digitsOnly.length >= 2 && digitsOnly.length <= 6;
+            const plusCount = (trimmed.match(/\+/g) || []).length;
+            const plusIsValid = plusCount === 0 || (plusCount === 1 && trimmed.startsWith('+'));
+            if (!allowedCharsRe.test(trimmed) || !hasValidDigitsCount || !plusIsValid) {
                 showFieldError(el, 'Укажите корректный код города (2–6 цифр)');
                 return false;
             }
@@ -666,10 +671,15 @@ function toggleActive(target){
             return;
         }
 
-        // Код города: только цифры
+        // Код города: цифры, скобки, пробел, дефис, плюс в начале
         if (validator === 'phoneCode') {
             const orig = target.value;
-            const filtered = orig.replace(/[^0-9+]/g, '')
+            let filtered = orig.replace(/[^0-9+()\-\s]/g, '');
+            // Разрешаем только один "+" и только в начале.
+            filtered = filtered.replace(/\+/g, '');
+            if (orig.trim().startsWith('+')) {
+                filtered = '+' + filtered;
+            }
             if (filtered !== orig) {
                 const pos = target.selectionStart || filtered.length;
                 target.value = filtered;

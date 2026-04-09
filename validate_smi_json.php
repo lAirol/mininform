@@ -241,7 +241,19 @@ class SmiJsonValidator {
     }
 
     private function validPhoneCode(string $v): bool {
-        return (bool)preg_match('/^\+?\d{2,6}$/', $v);
+        $v = trim($v);
+        if ($v === '') {
+            return false;
+        }
+        if (!preg_match('/^\+?[0-9()\-\s]+$/', $v)) {
+            return false;
+        }
+        if (substr_count($v, '+') > 1 || (strpos($v, '+') !== false && strpos($v, '+') !== 0)) {
+            return false;
+        }
+        $digits = preg_replace('/\D/', '', $v) ?? '';
+        $len = strlen($digits);
+        return $len >= 2 && $len <= 6;
     }
 
     private function validPercent($v, float $max = 100): bool {

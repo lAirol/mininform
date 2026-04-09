@@ -505,7 +505,7 @@ function toggleActive(target){
         if(!valid){
             return false;
         }
-        valid = addValStep5Sponsors();
+        // valid = addValStep5Sponsors();
         return valid;
     }
 

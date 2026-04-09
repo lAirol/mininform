@@ -191,22 +191,22 @@ class SmiJsonValidator {
             $add('financingMeetsLegalRqmts: финансирование должно соответствовать требованиям законодательства');
         }
 
-        $sponsors = $data['sponsors'] ?? [];
-        if (!is_array($sponsors) || count($sponsors) === 0) {
-            $add('sponsors: необходимо заполнить источники поступления средств');
-        } else {
-            foreach ($sponsors as $i => $s) {
-                if (!is_array($s)) continue;
-                if ($this->isEmpty($this->get($s, 'name'))) $add("sponsors[{$i}].name: поле обязательно");
-                if ($this->isEmpty($this->get($s, 'country'))) $add("sponsors[{$i}].country: поле обязательно");
-                if ($this->isEmpty($this->get($s, 'shareInCapital'))) $add("sponsors[{$i}].shareInCapital: поле обязательно");
-                elseif (!$this->validPercent($s['shareInCapital'], 100)) $add("sponsors[{$i}].shareInCapital: значение от 0 до 100");
-                if ($this->isEmpty($this->get($s, 'participationForm'))) $add("sponsors[{$i}].participationForm: поле обязательно");
-                if (($s['typeFace'] ?? '') === 'fizFace' && $this->isEmpty($this->get($s, 'address'))) {
-                    $add("sponsors[{$i}].address: поле обязательно для физ. лица");
-                }
-            }
-        }
+//        $sponsors = $data['sponsors'] ?? [];
+//        if (!is_array($sponsors) || count($sponsors) === 0) {
+//            $add('sponsors: необходимо заполнить источники поступления средств');
+//        } else {
+//            foreach ($sponsors as $i => $s) {
+//                if (!is_array($s)) continue;
+//                if ($this->isEmpty($this->get($s, 'name'))) $add("sponsors[{$i}].name: поле обязательно");
+//                if ($this->isEmpty($this->get($s, 'country'))) $add("sponsors[{$i}].country: поле обязательно");
+//                if ($this->isEmpty($this->get($s, 'shareInCapital'))) $add("sponsors[{$i}].shareInCapital: поле обязательно");
+//                elseif (!$this->validPercent($s['shareInCapital'], 100)) $add("sponsors[{$i}].shareInCapital: значение от 0 до 100");
+//                if ($this->isEmpty($this->get($s, 'participationForm'))) $add("sponsors[{$i}].participationForm: поле обязательно");
+//                if (($s['typeFace'] ?? '') === 'fizFace' && $this->isEmpty($this->get($s, 'address'))) {
+//                    $add("sponsors[{$i}].address: поле обязательно для физ. лица");
+//                }
+//            }
+//        }
 
         return [
             'ok' => count($errors) === 0,

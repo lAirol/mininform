@@ -22,7 +22,10 @@ class SmiJsonValidator {
             }
 
             $spec = $main['specialization'] ?? [];
-            if (!is_array($spec) || count($spec) === 0) {
+            $hasSpecialization =
+                (is_array($spec) && count($spec) > 0) ||
+                (is_string($spec) && trim($spec) !== '');
+            if (!$hasSpecialization) {
                 $add('mainInfo.specialization: выберите хотя бы один вариант');
             }
 

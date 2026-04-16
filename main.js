@@ -805,10 +805,14 @@ function setPath(root, path, value) {
         const isLast = i === parts.length - 1;
 
         if (isLast) {
-            if (value === 'true') value = true;
-            else if (value === 'false') value = false;
-            else if (!Number.isNaN(Number(value)) && value.trim() !== '') {
-                value = Number(value);
+            const isPhone = path.includes('phone')
+
+            if (!isPhone) {
+                if (value === 'true') value = true;
+                else if (value === 'false') value = false;
+                else if (!Number.isNaN(Number(value)) && value.trim() !== '') {
+                    value = Number(value);
+                }
             }
 
             const existing = obj[key];
